@@ -779,9 +779,48 @@
                     <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem; text-align: justify; line-height: 1.6;">
                         <strong>实验设定</strong>：本实验室旨在通过计算机在几毫秒内推演出多达数百个“平行宇宙（即 Monte Carlo 模拟迭代）”。在每个宇宙的数据生成过程 (DGP) 中，我们人为且明确地定死<strong>真实政策效应等于 0</strong>（即政策是一剂完全无效的生理盐水，零假设 $H_0: \beta = 0$ 绝对成立）。
                     </p>
-                    <p style="font-size: 0.875rem; color: var(--text-secondary); text-align: justify; line-height: 1.6;">
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); text-align: justify; line-height: 1.6; margin-bottom: 0.75rem;">
                         <strong>实验思路</strong>：当研究者设定显著性水平为 <strong>5%</strong> 时，意味着他们允许 5% 的统计推断出现假阳性（误诊）。如果一个标准误估计方法是正确且诚实的，那么在数百个宇宙中，它应该<strong>有且仅有大约 5% 的比例</strong>错误地拒绝零假设（宣称政策有用）。通过拖动左侧面板的 <strong>AR(1) 自相关系数 $\rho$</strong>，我们人为制造时序残留记忆的强弱，直观检验经典OLS (IID)、稳健标准误 (HC1) 以及省份级聚类标准误 (Cluster) 对这 5% 显著水平的防守能力，亲眼见证 BDM (2004) 中 45% 过度拒绝的震撼效应。
                     </p>
+
+                    <!-- 数据生成过程 (DGP) 折叠层 -->
+                    <details class="premium-details" style="margin-top: 1rem; margin-bottom: 0; background: rgba(255, 255, 255, 0.01);">
+                        <summary class="premium-summary" style="font-size: 0.825rem; color: var(--color-cluster);">🧬 点击展开：数据生成与构造过程 (DGP) 技术细节</summary>
+                        <div class="details-content" style="font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary); padding-top: 0.75rem;">
+                            <p style="margin-bottom: 0.75rem;">本实验的数据生成过程 (DGP) 严格参照 BDM (2004) 及学术规范，按如下五个步骤在内存中动态合成：</p>
+                            <ol style="padding-left: 1.2rem; margin-bottom: 0.75rem;">
+                                <li style="margin-bottom: 0.5rem;">
+                                    <strong>面板维度构建</strong>：
+                                    定义一个具有 <em>G</em> 个省份、每省 <em>N</em> 个企业单位、观测期固定为 <em>T</em> = 10 期的平衡面板。总观测个体量为 <em>I = G &times; N</em>，总样本量为 <em>I &times; T</em>。
+                                </li>
+                                <li style="margin-bottom: 0.5rem;">
+                                    <strong>AR(1) 残差时序依赖生成</strong>：
+                                    对于每个独立的企业个体 <em>i</em>，其 10 期的残差序列 &epsilon;<sub>it</sub> 基于一阶自相关过程递推：
+                                    <div style="background: rgba(255,255,255,0.03); padding: 0.4rem; border-radius: 6px; text-align: center; margin: 0.4rem 0; font-family: monospace; border: 1px solid rgba(255,255,255,0.05);">
+                                        &epsilon;<sub>i1</sub> &sim; N(0, 1)<br>
+                                        &epsilon;<sub>it</sub> = &rho;&epsilon;<sub>i, t-1</sub> + &nu;<sub>it</sub> &nbsp;&nbsp;(其中 &nu;<sub>it</sub> &sim; N(0, 1))
+                                    </div>
+                                    这里的 &rho; 即为左侧拖动的自相关系数。当 &rho; &gt; 0 时，本期残差中会继承前期的冲击，制造路径依赖。
+                                </li>
+                                <li style="margin-bottom: 0.5rem;">
+                                    <strong>政策虚拟变量 D<sub>it</sub> 构造</strong>：
+                                    随机抽取正好 <strong>20% 的省份</strong> 作为政策试点地区（治疗组）。政策时点定在 <strong>t &ge; 5</strong>。因此，若企业 <em>i</em> 所在省份被抽中且处于 <em>t &ge; 5</em>，则 D<sub>it</sub> = 1，否则 D<sub>it</sub> = 0。
+                                </li>
+                                <li style="margin-bottom: 0.5rem;">
+                                    <strong>观测因变量 Y<sub>it</sub> 合成</strong>：
+                                    基于结构方程合成观测值：
+                                    <div style="background: rgba(255,255,255,0.03); padding: 0.4rem; border-radius: 6px; text-align: center; margin: 0.4rem 0; font-family: monospace; border: 1px solid rgba(255,255,255,0.05);">
+                                        Y<sub>it</sub> = u<sub>i</sub> + &beta;D<sub>it</sub> + &epsilon;<sub>it</sub>
+                                    </div>
+                                    横截面异质冲击 u<sub>i</sub> &sim; N(0, 1) 代表企业个体固定效应。由于我们测试的是假阳性率（无中生有的虚假显著性），我们必须将真实的政策效应 <strong>&beta; 定死为 0</strong>，故实际生成公式为 Y<sub>it</sub> = u<sub>i</sub> + 0 &times; D<sub>it</sub> + &epsilon;<sub>it</sub>。
+                                </li>
+                                <li style="margin-bottom: 0.5rem;">
+                                    <strong>去双向固定效应估计</strong>：
+                                    对数据进行双向去均值（Within-panel Transformation），消除个体固定效应 u<sub>i</sub> 与时间趋势，然后基于普通最小二乘法 (OLS) 估计政策系数 &hat;&beta; 并计算对应标准误，从而完成一次平行宇宙的推演。
+                                </li>
+                            </ol>
+                        </div>
+                    </details>
                 </div>
 
                 <div class="grid-visuals">
