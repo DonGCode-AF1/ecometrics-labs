@@ -1,0 +1,3 @@
+@echo off
+echo Starting BDM (2004) clustering simulation sandbox...
+start "" "%~dp0bdm_simulation_dashboard.html"
