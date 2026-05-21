@@ -62,13 +62,6 @@ jupyter notebook
 
 ---
 
-## 🚀 未来扩展计划 (Roadmap)
-本仓库作为一个通用的**实证经济学交互乐园**，未来将逐步上线以下高水平学术实验室：
-- [ ] **Lab 4: Causal Inference & RI**: 随机化推断（Randomization Inference）与 Fisher 确切概率检验。
-- [ ] **Lab 5: Weak Instruments**: 工具变量（IV）弱工具变量偏误与第一阶段 F 检验临界值。
-- [ ] **Lab 6: Twoway Fixed Effects (TWFE)**: 双重固定效应下的“坏控制变量”与处理效应异质性偏误。
-
----
 
 ## 🤝 开发者与 AI 助手协同开发规范 (For Successor AI Assistants)
 后续接手本仓库的 AI 助手，**必须**严格遵循 [ai-coding-skills.md](ai-coding-skills.md) 指南：
