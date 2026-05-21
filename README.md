@@ -58,6 +58,7 @@ jupyter notebook
 | 实验室目录 | 涵盖知识点与核心机制 | 核心交互与可视化亮点 |
 | :--- | :--- | :--- |
 | **[Clustering MonteCarlo](labs/Clustering%20MonteCarlo/)** | **组内自相关与聚类稳健标准误 (CRVE)**：复现 Bertrand et al. (2004) 面板自相关导致 OLS 假阳性率飙升至 45% 的学术灾难。 | 🎚️ **自相关系数 $\rho$** (-0.9 ~ 0.9)<br>🎚️ **省份组数 $G$ 与观测数 $N$**<br>📈 **KDE核密度曲线、SVG置信区间动态渲染** |
+| **[Clustering_MonteCarlo_Analysis](labs/Clustering_MonteCarlo_Analysis/)** | **BDM 蒙特卡洛学术级复现与深度剖析**：系统性诊断老师代码中的自由度与大样本偏差修正因子，结合课件深度解析实验原理、双向去均值（Within）算法以及学术级 Bar Chart 可视化。 | 📈 **自相关侵害退化趋势图**<br>📓 **大样本纠偏系数 (G/(G-1) * (M-1)/(M-k)) 手动实现** |
 | **[clt-demo](labs/clt-demo/)** | **中心极限定理 (CLT)**：展示任意母体分布的均值在样本容量 $N \to \infty$ 时服从正态分布。 | 📈 **母体分布自由设定**<br>🎚️ **样本容量 $N$** |
 | **[coin-toss-demo](labs/coin-toss-demo/)** | **大数定律 (LLN)**：通过数万次掷硬币实验的频率收敛动态，展示概率的收敛视觉。 | 📈 **动态收敛曲线**<br>🎚️ **抛掷次数** |
 | **[ols-properties-demo](labs/ols-properties-demo/)** | **OLS 估计量性质体检**：动态模拟与检验 Gauss-Markov 定理中的无偏性与 BLUE 性质。 | 📈 **抽样分布直方图**<br>🎚️ **样本量与扰动方差** |
