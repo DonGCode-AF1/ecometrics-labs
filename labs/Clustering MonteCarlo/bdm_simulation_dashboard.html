@@ -725,7 +725,7 @@
                             然而，在 AR(1) 过程自相关系数 <strong>&rho; > 0</strong> 时，同一个省份不同年份的残差里其实包含着高度重叠的“本地冲击信号”。
                         </p>
                         <p class="academic-p">
-                            如果使用经典算法，相当于强行把这些<strong>重叠信息</strong>判定为<strong>独立新样本</strong>。这会使得估计出来的标准误差小得可怜，进而让算出来的 $t$-统计量异常膨胀。
+                            如果使用经典算法，相当于强行把这些<strong>重叠信息</strong>判定为<strong>独立新样本</strong>。这会使得估计出来的标准误差小得可怜，进而让算出来的 <em>t</em>-统计量异常膨胀。
                             BDM (2004) 用蒙特卡洛实验首次向世界敲响警钟：<strong>即使政策完全没有半点实际效果，传统方法依然有接近 45% 的概率宣告政策显著！</strong>
                         </p>
 
@@ -907,8 +907,8 @@
                         <details class="premium-details" style="margin-top: 0.5rem; margin-bottom: 0; padding: 0.4rem 0.6rem;">
                             <summary class="premium-summary" style="font-size: 0.75rem; color: var(--text-secondary);">💡 t 经验分布解读</summary>
                             <div class="details-content" style="font-size: 0.75rem; line-height: 1.4; padding-top: 0.4rem;">
-                                <p style="margin-bottom: 0.4rem;"><strong>窗口含义</strong>：绘制估计得到的 $t$-统计量经验概率密度（核密度估计 PDF）。白色虚线为标准正态分布，红色虚线为 $\pm 1.96$ 的 5% 显著性检验界线。</p>
-                                <p><strong>直觉诊断</strong>：拖高自相关 $\rho$ 时，红色的 OLS 统计量曲线会急剧<strong>塌陷并长出厚重的胖尾（Fat Tails）</strong>。大量 $t$ 值被甩到红线之外，直观展现了假阳性在统计分布上的根本成因，而聚类标准误（蓝色曲线）则坚守高斯分布形态。</p>
+                                <p style="margin-bottom: 0.4rem;"><strong>窗口含义</strong>：绘制估计得到的 <em>t</em>-统计量经验概率密度（核密度估计 PDF）。白色虚线为标准正态分布，红色虚线为 $\pm 1.96$ 的 5% 显著性检验界线。</p>
+                                <p><strong>直觉诊断</strong>：拖高自相关 $\rho$ 时，红色的 OLS 统计量曲线会急剧<strong>塌陷并长出厚重的胖尾（Fat Tails）</strong>。大量 <em>t</em> 值被甩到红线之外，直观展现了假阳性在统计分布上的根本成因，而聚类标准误（蓝色曲线）则坚守高斯分布形态。</p>
                             </div>
                         </details>
                     </div>
@@ -962,10 +962,10 @@
                             
                             <!-- 前沿 1: 小样本聚类 -->
                             <div class="glass-card" style="background: rgba(255,255,255,0.02);">
-                                <div class="frontier-badge">边界突破 1：小样本群组 (G &lt; 30)</div>
+                                <div class="frontier-badge">边界突破 1：小样本群组 (<em>G</em> &lt; 30)</div>
                                 <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">为什么失效？</h3>
                                 <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5;">
-                                    聚类标准误的有效性依赖于“渐近大样本理论”（要求组数 $G \to \infty$）。当聚类组数太少（如仅有 10 个省份）时，CRVE 对残差方差的估计存在向下的偏差，导致假阳性率再次抬头。
+                                    聚类标准误的有效性依赖于“渐近大样本理论”（要求组数 <em>G</em> &rarr; &infin;）。当聚类组数太少（如仅有 10 个省份）时，CRVE 对残差方差的估计存在向下的偏差，导致假阳性率再次抬头。
                                 </p>
                                 <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-wild);">前沿对策：Wild Cluster Bootstrap</h3>
                                 <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5;">
@@ -982,7 +982,7 @@
                                 </p>
                                 <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-twoway);">前沿对策：双重聚类 (Two-way Cluster)</h3>
                                 <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5;">
-                                    由 Cameron, Gelbach, and Miller (2011) 提出，通过同时在省份和年份两个维度对协方差矩阵对角块进行松绑解放：$V_{2way} = V_{id} + V_{time} - V_{id \cap time}$，从时空双维度锁死推断漏洞。
+                                    由 Cameron, Gelbach, and Miller (2011) 提出，通过同时在省份和年份两个维度对协方差矩阵对角块进行松绑解放：<em>V</em><sub>2way</sub> = <em>V</em><sub>id</sub> + <em>V</em><sub>time</sub> - <em>V</em><sub>id &cap; time</sub>，从时空双维度锁死推断漏洞。
                                 </p>
                             </div>
 
