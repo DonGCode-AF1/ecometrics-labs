@@ -761,9 +761,88 @@
                             </tbody>
                         </table>
 
-                        <p class="academic-p" style="margin-top: 1.5rem; text-align: center; color: var(--color-cluster); font-weight: 600;">
+                        <p class="academic-p" style="margin-top: 1.5rem; text-align: center; color: var(--color-cluster); font-weight: 600; margin-bottom: 1rem;">
                             💡 点击左侧面板的“⚡ 运行蒙特卡洛模拟”按钮，进入平行宇宙实验室亲自验证！
                         </p>
+
+                        <!-- 💻 代码复现折叠面板 -->
+                        <details class="premium-details" style="margin-top: 1rem; background: rgba(255, 255, 255, 0.01);">
+                            <summary class="premium-summary" style="font-size: 0.8rem; color: var(--color-cluster);">💻 点击展开：Stata & Python 蒙特卡洛学术复现代码</summary>
+                            <div class="details-content" style="font-size: 0.75rem; padding-top: 0.75rem; color: var(--text-secondary); line-height: 1.5;">
+                                <p style="margin-bottom: 0.75rem;">为了方便您在学术论文或日常研究中复现这一现象，我们提供了标准的 **Stata** 和 **Python** 代码模板。您可以直接复制并在本地环境中运行：</p>
+                                
+                                <div style="margin-bottom: 1rem;">
+                                    <div style="font-size: 0.75rem; color: #fff; font-weight: 600; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.3rem;">🔵 Stata 蒙特卡洛复现脚本</div>
+                                    <pre style="background: rgba(0,0,0,0.35); padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; font-family: monospace; color: #8892b0; font-size: 0.7rem; line-height: 1.45; margin: 0;">
+* ========================================== *
+* Stata 模拟: BDM(2004) 45% 过度拒绝复现
+* ========================================== *
+clear all
+set obs 500         // 500 个观测体
+gen id = _n
+expand 10           // 10 个时期
+bysort id: gen t = _n
+
+* 构造自相关残差 (自相关系数 rho = 0.8)
+gen eps = .
+bysort id: replace eps = rnormal(0, 1) if t == 1
+bysort id: replace eps = 0.8 * eps[_n-1] + rnormal(0, 1) if t > 1
+
+* 设定省份级聚类层级 (50 个组)
+gen g = ceil(id / 10)
+save "simdata.dta", replace
+
+* 运行蒙特卡洛推演
+forv i = 1/300 {
+    use "simdata.dta", clear
+    * 随机分配 20% 省份为政策试点组 (治疗组)
+    qui g grnum = runiform(0,1) if t == 1
+    bysort g: replace grnum = grnum[1]
+    qui gen year = (t >= 5)
+    qui gen treat = (grnum <= 0.2) * year // 真实效应为 0
+    qui gen y = treat * 0 + eps
+    
+    * 经典OLS (不聚类)
+    qui reg y treat
+    * 组内聚类标准误
+    qui reg y treat, vce(cluster g)
+}</pre>
+                                </div>
+
+                                <div>
+                                    <div style="font-size: 0.75rem; color: #fff; font-weight: 600; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.3rem;">🐍 Python numpy/scipy 极速仿真引擎</div>
+                                    <pre style="background: rgba(0,0,0,0.35); padding: 0.6rem 0.8rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; font-family: monospace; color: #8892b0; font-size: 0.7rem; line-height: 1.45; margin: 0;">
+# 双向去均值与 OLS 聚类核心计算逻辑
+import numpy as np
+from scipy import stats
+
+def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
+    # 1. 构造 AR(1) 误差
+    eps = np.zeros((n_units, n_periods))
+    eps[:, 0] = np.random.normal(0, 1, n_units)
+    for t in range(1, n_periods):
+        eps[:, t] = rho * eps[:, t - 1] + np.random.normal(0, 1, n_units)
+        
+    # 2. 随机分配治疗组，设定真实效应为 0
+    D = np.zeros((n_units, n_periods))
+    treated = np.random.choice(n_groups, size=n_groups//5, replace=False)
+    group_ids = np.repeat(np.arange(n_groups), n_units // n_groups)
+    D[np.isin(group_ids, treated), 5:] = 1
+    Y = 0 * D + eps
+    
+    # 3. 面板双向去均值 (Within Transformation)
+    Y_dm = Y - Y.mean(axis=1, keepdims=True) - Y.mean(axis=0) + Y.mean()
+    D_dm = D - D.mean(axis=1, keepdims=True) - D.mean(axis=0) + D.mean()
+    
+    # 4. 估计系数与单向聚类标准误
+    beta_hat = (D_dm * Y_dm).sum() / (D_dm ** 2).sum()
+    resid = Y_dm - beta_hat * D_dm
+    group_scores = (D_dm.reshape(n_groups, -1) * resid.reshape(n_groups, -1)).sum(axis=1)
+    se_cl = np.sqrt((group_scores ** 2).sum() / (D_dm ** 2).sum() ** 2 * n_groups / (n_groups - 1))
+    return beta_hat, se_cl</pre>
+                                </div>
+                            </div>
+                        </details>
                     </div>
                 </div>
             </div>
