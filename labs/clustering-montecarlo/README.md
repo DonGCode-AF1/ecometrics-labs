@@ -10,7 +10,7 @@
 ## 📂 实验室资源结构
 
 ```text
-Clustering MonteCarlo/
+clustering-montecarlo/
 ├── 📊 bdm_simulation_dashboard.html  # 核心：互动式单文件模拟仪表盘 (零依赖、开箱即用)
 ├── 📓 L3_Clustering_MonteCarlo.ipynb  # 拓展：Python 及 Stata 蒙特卡洛模拟复现脚本
 ├── 📝 bdm_academic_review.md          # 理论：计量经济学关于聚类推断的学术文献评述

@@ -20,7 +20,7 @@ empirical-playground/
 ├── .gitignore                          # Git 忽略配置
 ├── ai-coding-skills.md                 # 🤖 AI 助手接手开发规范与人机协同指南
 └── labs/                               # 🧪 交互式计量经济学实验室 (Labs)
-    ├── Clustering MonteCarlo/          # 【精选展台】BDM (2004) 聚类自相关蒙特卡洛模拟实验室
+    ├── clustering-montecarlo/          # 【精选展台】BDM (2004) 聚类自相关蒙特卡洛模拟实验室
     │   ├── bdm_simulation_dashboard.html # 🚀 离线自旋式 HTML5 极美交互式沙盒 (零依赖)
     │   ├── L3_Clustering_MonteCarlo.ipynb# Python 蒙特卡洛底座与 Stata 复现脚本
     │   ├── bdm_academic_review.md      # 学术文献评述与理论内核梳理
@@ -35,7 +35,7 @@ empirical-playground/
 ## ⚡ 快速开始与一键运行 (Quick Start)
 
 ### 1. 📊 极速体验离线交互沙盒（免环境配置）
-进入 `labs/Clustering MonteCarlo/` 目录：
+进入 `labs/clustering-montecarlo/` 目录：
 *   **Windows**：直接双击运行 `run_dashboard.bat`。
 *   **macOS / Linux**：双击或在终端运行 `bash run_dashboard.sh`。
 *   这会立即在您的默认浏览器中打开高保真的“蒙特卡洛平行宇宙实验室”，您可以调整自相关系数 $\rho$、聚类组数 $G$，在几毫秒内运算数百个宇宙！
@@ -57,7 +57,7 @@ jupyter notebook
 
 | 实验室目录 | 涵盖知识点与核心机制 | 核心交互与可视化亮点 |
 | :--- | :--- | :--- |
-| **[Clustering MonteCarlo](labs/Clustering%20MonteCarlo/)** | **组内自相关与聚类稳健标准误 (CRVE)**：复现 Bertrand et al. (2004) 面板自相关导致 OLS 假阳性率飙升至 45% 的学术灾难。 | 🎚️ **自相关系数 $\rho$** (-0.9 ~ 0.9)<br>🎚️ **省份组数 $G$ 与观测数 $N$**<br>📈 **KDE核密度曲线、SVG置信区间动态渲染** |
+| **[clustering-montecarlo](labs/clustering-montecarlo/)** | **组内自相关与聚类稳健标准误 (CRVE)**：复现 Bertrand et al. (2004) 面板自相关导致 OLS 假阳性率飙升至 45% 的学术灾难。 | 🎚️ **自相关系数 $\rho$** (-0.9 ~ 0.9)<br>🎚️ **省份组数 $G$ 与观测数 $N$**<br>📈 **KDE核密度曲线、SVG置信区间动态渲染** |
 | **[Clustering_MonteCarlo_Analysis](labs/Clustering_MonteCarlo_Analysis/)** | **BDM 蒙特卡洛学术级复现与深度剖析**：系统性诊断老师代码中的自由度与大样本偏差修正因子，结合课件深度解析实验原理、双向去均值（Within）算法以及学术级 Bar Chart 可视化。 | 📈 **自相关侵害退化趋势图**<br>📓 **大样本纠偏系数 (G/(G-1) * (M-1)/(M-k)) 手动实现** |
 | **[clt-demo](labs/clt-demo/)** | **中心极限定理 (CLT)**：展示任意母体分布的均值在样本容量 $N \to \infty$ 时服从正态分布。 | 📈 **母体分布自由设定**<br>🎚️ **样本容量 $N$** |
 | **[coin-toss-demo](labs/coin-toss-demo/)** | **大数定律 (LLN)**：通过数万次掷硬币实验的频率收敛动态，展示概率的收敛视觉。 | 📈 **动态收敛曲线**<br>🎚️ **抛掷次数** |
