@@ -13,3 +13,8 @@
 [2026-05-21 12:05] BY Antigravity
 - TYPE: 【日志归档】
 - DETAILS: 初始化并编写 `prompt-thoughts-log/prompt_thoughts_archive.md` 和本操作历史日志文件。
+
+[2026-05-21 12:20] BY Antigravity
+- TYPE: 【导入与扩展实验】
+- DETAILS: 创建子目录 `labs/Clustering MonteCarlo`，导入 L3 Jupyter Notebook。设计并实现具有极简黑金拟物美学、高能 JS 并行计算引擎的 `bdm_simulation_dashboard.html` 主力交互网页沙盒，提供 IID、HC1 与组聚类的大比拼以及 t 统计量胖尾分布、置信区间物理覆盖图的核密度动态渲染。编写了 `bdm_academic_review.md` 拆解蒙特卡洛平行宇宙的直觉。
+

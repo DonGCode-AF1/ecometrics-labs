@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 BDM (2004) 聚类模拟与蒙特卡洛平行宇宙实验室</title>
+    <style>
+        /* ==========================================================================
+           🎨 核心设计系统 - 黑金拟物化玻璃态 (Dark-mode Glassmorphism)
+           ========================================================================== */
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Noto+Sans+SC:wght@300;400;600;700&display=swap');
+
+        :root {
+            --bg-body: #0a0c10;
+            --bg-glass: rgba(22, 26, 37, 0.65);
+            --bg-glass-hover: rgba(29, 34, 48, 0.8);
+            --border-glass: rgba(255, 255, 255, 0.08);
+            --border-glass-active: rgba(255, 255, 255, 0.2);
+            --text-primary: #f3f4f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            
+            /* Harmonic Method Colors */
+            --color-iid: #ef4444;      /* Deep Crimson */
+            --color-robust: #f59e0b;   /* Amber Gold */
+            --color-cluster: #3b82f6;  /* Sapphire Indigo */
+            --color-twoway: #a855f7;   /* Violet Amethyst */
+            --color-wild: #10b981;     /* Emerald Green */
+            
+            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(239, 68, 68, 0.05) 0px, transparent 50%);
+            background-attachment: fixed;
+            color: var(--text-primary);
+            font-family: 'Outfit', 'Noto Sans SC', sans-serif;
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* ==========================================================================
+           🧱 布局组件
+           ========================================================================== */
+        header {
+            background: rgba(10, 12, 16, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-glass);
+            padding: 1.25rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-badge {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+            font-size: 0.75rem;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            font-weight: 600;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0.25rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .nav-tab {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-tab.active {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .main-container {
+            max-width: 1440px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 2rem;
+        }
+
+        /* ==========================================================================
+           🎛️ 侧边控制栏 (Sidebar Controls)
+           ========================================================================== */
+        .sidebar {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 1.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 6.5rem;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-primary);
+            border-left: 3px solid var(--color-cluster);
+            padding-left: 0.5rem;
+        }
+
+        .control-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .control-label span.val {
+            color: var(--color-cluster);
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--color-cluster);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+            transition: var(--transition-smooth);
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .btn-run {
+            width: 100%;
+            background: linear-gradient(135deg, var(--color-cluster) 0%, #1e40af 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 0.85rem;
+            border-radius: 12px;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn-run:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, 0.35);
+        }
+
+        .btn-run:active {
+            transform: translateY(0);
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            margin-top: 1rem;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--color-wild);
+            transition: width 0.1s linear;
+        }
+
+        /* ==========================================================================
+           📊 主展示面板 (Main Panel Contents)
+           ========================================================================== */
+        .content-panel {
+            display: none;
+        }
+
+        .content-panel.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .grid-visuals {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            transition: var(--transition-smooth);
+        }
+
+        .glass-card:hover {
+            border-color: var(--border-glass-active);
+            background: var(--bg-glass-hover);
+        }
+
+        .glass-card.full-width {
+            grid-column: span 2;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.2px;
+        }
+
+        /* 拒绝率柱状图渲染 */
+        .chart-bar-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            padding: 0.5rem 0;
+        }
+
+        .chart-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .chart-row-label {
+            width: 140px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .chart-row-bar-track {
+            flex: 1;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .chart-row-bar-fill {
+            height: 100%;
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+
+        .chart-row-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, transparent 100%);
+        }
+
+        .chart-row-value {
+            width: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-align: right;
+            font-family: monospace;
+        }
+
+        .nominal-line-marker {
+            position: absolute;
+            left: 5%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--color-wild);
+            z-index: 10;
+            box-shadow: 0 0 8px var(--color-wild);
+        }
+
+        .nominal-line-text {
+            position: absolute;
+            left: calc(5% + 8px);
+            top: 2px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--color-wild);
+            background: var(--bg-body);
+            padding: 1px 4px;
+            border-radius: 3px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        /* t统计量经验分布曲线绘制 */
+        .svg-chart {
+            width: 100%;
+            height: 220px;
+            background: rgba(255, 255, 255, 0.01);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        /* 置信区间绘图 */
+        .ci-chart-legend {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.75rem;
+            margin-bottom: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .ci-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .ci-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .ci-dot.success { background: var(--color-wild); }
+        .ci-dot.fail { background: var(--color-iid); }
+
+        /* ==========================================================================
+           📖 理论教学面板样式
+           ========================================================================== */
+        .academic-doc {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 1rem 0;
+        }
+
+        .academic-h2 {
+            font-size: 1.35rem;
+            font-weight: 700;
+            margin: 2rem 0 1rem;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .academic-p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.25rem;
+            text-align: justify;
+        }
+
+        .academic-p strong {
+            color: var(--text-primary);
+        }
+
+        .quote-callout {
+            background: rgba(59, 130, 246, 0.05);
+            border-left: 4px solid var(--color-cluster);
+            padding: 1rem 1.25rem;
+            border-radius: 0 12px 12px 0;
+            margin: 1.5rem 0;
+        }
+
+        .quote-callout p {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .quote-callout span {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* 极简学术列表 */
+        .academic-list {
+            margin: 1rem 0 1.5rem 1.5rem;
+        }
+
+        .academic-list li {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }
+
+        .academic-list li strong {
+            color: var(--text-primary);
+        }
+
+        /* LaTeX/公式块样式 */
+        .math-block {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.1rem;
+            margin: 1.5rem 0;
+            color: #60a5fa;
+            letter-spacing: 0.5px;
+        }
+
+        /* ==========================================================================
+           🔍 前沿探索面板样式
+           ========================================================================== */
+        .frontier-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .frontier-badge {
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #c084fc;
+            font-size: 0.7rem;
+            padding: 0.15rem 0.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            width: fit-content;
+            margin-bottom: 0.75rem;
+        }
+
+        /* ==========================================================================
+           📊 对比数据表格
+           ========================================================================== */
+        .academic-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.875rem;
+            text-align: left;
+        }
+
+        .academic-table th {
+            border-bottom: 2px solid var(--border-glass);
+            padding: 0.75rem 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .academic-table td {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.75rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .academic-table tr:hover td {
+            background: rgba(255, 255, 255, 0.01);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ==========================================================================
+         header: 导航与标签页
+         ========================================================================== -->
+    <header>
+        <div class="header-title">
+            <h1>BDM (2004) 聚类模拟与平行宇宙实验室</h1>
+            <span class="header-badge">计量实证推断体检</span>
+        </div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchTab('tab-theory')">📚 学术内核与直觉</button>
+            <button class="nav-tab" onclick="switchTab('tab-sim')">🧪 仿真交互沙盒</button>
+            <button class="nav-tab" onclick="switchTab('tab-frontiers')">🚀 前沿体检与拓展</button>
+        </div>
+    </header>
+
+    <!-- ==========================================================================
+         main CONTAINER: 侧边调参 + 主内容区
+         ========================================================================== -->
+    <div class="main-container">
+        
+        <!-- 侧边调参面板 -->
+        <div class="sidebar">
+            <div class="section-title">🎛️ 蒙特卡洛参数设定</div>
+            
+            <div class="control-group">
+                <div class="control-label">
+                    <span>AR(1) 残差自相关 (ρ)</span>
+                    <span class="val" id="val-rho">0.80</span>
+                </div>
+                <input type="range" id="param-rho" class="slider" min="0" max="0.9" step="0.1" value="0.8">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>平行宇宙模拟次数</span>
+                    <span class="val" id="val-nsim">200</span>
+                </div>
+                <input type="range" id="param-nsim" class="slider" min="50" max="300" step="50" value="200">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>省份组数 (G)</span>
+                    <span class="val" id="val-ngroups">50</span>
+                </div>
+                <input type="range" id="param-ngroups" class="slider" min="10" max="100" step="10" value="50">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>每组观测数量 (N)</span>
+                    <span class="val" id="val-nunits">10</span>
+                </div>
+                <input type="range" id="param-nunits" class="slider" min="5" max="30" step="5" value="10">
+            </div>
+
+            <button class="btn-run" onclick="triggerSimulation()">
+                <span>⚡ 运行蒙特卡洛模拟</span>
+            </button>
+
+            <div class="progress-bar-container" id="sim-progress-container">
+                <div class="progress-bar" id="sim-progress-bar"></div>
+            </div>
+        </div>
+
+        <!-- 右侧主内容展示面板 -->
+        <div class="main-content">
+
+            <!-- TAB 1: 📚 学术内核与直觉 -->
+            <div id="tab-theory" class="content-panel active">
+                <div class="glass-card">
+                    <div class="academic-doc">
+                        <h1 style="font-size: 1.75rem; font-weight: 700; margin-bottom: 1rem; color: #fff;">📚 为什么我们需要对标准误“体检”？</h1>
+                        
+                        <div class="quote-callout">
+                            <p>“我们应该在多大程度上信任双重差分估计？”</p>
+                            <span>—— Bertrand, Duflo, and Mullainathan (2004), QJE</span>
+                        </div>
+
+                        <p class="academic-p">
+                            在实证经济学中，<strong>双重差分法（DID）</strong>几乎是评估政策效应的黄金标准。
+                            然而，现实世界中的大多数宏观或区域变量（如各省 GDP、工资、税率）都具有极强的<strong>路径依赖/时间自相关性</strong>（即今年的状态深受昨天状态的影响）。
+                        </p>
+
+                        <div class="math-block">
+                            &epsilon;<sub>it</sub> = &rho; &epsilon;<sub>i,t-1</sub> + &nu;<sub>it</sub>
+                        </div>
+
+                        <h2 class="academic-h2">🤯 自相关如何欺骗了传统统计推断？</h2>
+                        <p class="academic-p">
+                            传统的经典标准误（IID）假设所有的观测值残差之间是彻底独立的。
+                            然而，在 AR(1) 过程自相关系数 <strong>&rho; > 0</strong> 时，同一个省份不同年份的残差里其实包含着高度重叠的“本地冲击信号”。
+                        </p>
+                        <p class="academic-p">
+                            如果使用经典算法，相当于强行把这些<strong>重叠信息</strong>判定为<strong>独立新样本</strong>。这会使得估计出来的标准误差小得可怜，进而让算出来的 $t$-统计量异常膨胀。
+                            BDM (2004) 用蒙特卡洛实验首次向世界敲响警钟：<strong>即使政策完全没有半点实际效果，传统方法依然有接近 45% 的概率宣告政策显著！</strong>
+                        </p>
+
+                        <h2 class="academic-h2">🛠️ 标准误家族的“对角线革命”</h2>
+                        <p class="academic-p">
+                            为了纠正这一灾难，我们需要调整残差的方差-协方差矩阵（VCE）：
+                        </p>
+
+                        <table class="academic-table">
+                            <thead>
+                                <tr>
+                                    <th>标准误类型</th>
+                                    <th>物理假设直觉</th>
+                                    <th>对自相关的防范效果</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="color: var(--color-iid); font-weight: 600;">IID 经典标准误</td>
+                                    <td>假设每个观测样本都是完全孤立的岛屿，毫无关联。</td>
+                                    <td>🚫 <b>完全无效</b>。在自相关下假阳性率飙升至 45%。</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: var(--color-robust); font-weight: 600;">HC1 稳健标准误</td>
+                                    <td>允许不同个体波动大，但仍然坚信时序之间完全独立。</td>
+                                    <td>🚫 <b>完全无效</b>。仅纠正异方差，无视自相关，依然崩溃。</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: var(--color-cluster); font-weight: 600;">单向聚类标准误</td>
+                                    <td>释放省份内部所有年份的限制，允许任意自相关与异方差。</td>
+                                    <td>✅ <b>极其优秀</b>。样本组数足够时，稳妥收敛于名义 5% 线。</td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <p class="academic-p" style="margin-top: 1.5rem; text-align: center; color: var(--color-cluster); font-weight: 600;">
+                            💡 点击左侧面板的“⚡ 运行蒙特卡洛模拟”按钮，进入平行宇宙实验室亲自验证！
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: 🧪 仿真交互沙盒 -->
+            <div id="tab-sim" class="content-panel">
+                <div class="grid-visuals">
+                    
+                    <!-- 拒绝率动态柱状图 -->
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <span class="card-title">📊 平行宇宙真实拒绝率对比（名义显性 5%）</span>
+                        </div>
+                        <div class="chart-bar-container" style="height: 220px; position: relative;">
+                            
+                            <!-- 名义显著性 5% 警戒线 -->
+                            <div class="nominal-line-marker"></div>
+                            <div class="nominal-line-text">标称 5% 显著水平</div>
+                            
+                            <!-- 行 1: IID -->
+                            <div class="chart-row">
+                                <div class="chart-row-label" style="color: var(--color-iid);">IID 经典标准误</div>
+                                <div class="chart-row-bar-track">
+                                    <div class="chart-row-bar-fill" id="bar-iid" style="background: var(--color-iid);"></div>
+                                </div>
+                                <div class="chart-row-value" id="val-bar-iid" style="color: var(--color-iid);">0.0%</div>
+                            </div>
+
+                            <!-- 行 2: Robust -->
+                            <div class="chart-row">
+                                <div class="chart-row-label" style="color: var(--color-robust);">HC1 稳健标准误</div>
+                                <div class="chart-row-bar-track">
+                                    <div class="chart-row-bar-fill" id="bar-robust" style="background: var(--color-robust);"></div>
+                                </div>
+                                <div class="chart-row-value" id="val-bar-robust" style="color: var(--color-robust);">0.0%</div>
+                            </div>
+
+                            <!-- 行 3: Cluster -->
+                            <div class="chart-row">
+                                <div class="chart-row-label" style="color: var(--color-cluster);">省份级单向聚类</div>
+                                <div class="chart-row-bar-track">
+                                    <div class="chart-row-bar-fill" id="bar-cluster" style="background: var(--color-cluster);"></div>
+                                </div>
+                                <div class="chart-row-value" id="val-bar-cluster" style="color: var(--color-cluster);">0.0%</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- t统计量经验分布与胖尾渲染 -->
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <span class="card-title">📈 t 统计量经验分布拟合（直观展示胖尾）</span>
+                        </div>
+                        <svg class="svg-chart" id="t-dist-svg" viewBox="0 0 400 220">
+                            <!-- 坐标轴 -->
+                            <line x1="50" y1="180" x2="370" y2="180" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"></line>
+                            <line x1="210" y1="20" x2="210" y2="180" stroke="rgba(255,255,255,0.1)" stroke-dasharray="3,3"></line>
+                            <!-- 临界线 ±1.96 -->
+                            <line x1="140" y1="20" x2="140" y2="180" stroke="#ef4444" stroke-dasharray="2,2" opacity="0.6"></line>
+                            <line x1="280" y1="20" x2="280" y2="180" stroke="#ef4444" stroke-dasharray="2,2" opacity="0.6"></line>
+                            <!-- 标准正态曲线背景 (Dotted grey) -->
+                            <path id="path-normal" d="" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-dasharray="3,3"></path>
+                            <!-- 实际估计的 OLS 经典 t 分布曲线 (Red) -->
+                            <path id="path-t-iid" d="" fill="none" stroke="var(--color-iid)" stroke-width="2.5"></path>
+                            <!-- 实际估计的 Cluster t 分布曲线 (Blue) -->
+                            <path id="path-t-cluster" d="" fill="none" stroke="var(--color-cluster)" stroke-width="2.5"></path>
+                            
+                            <!-- 文字标注 -->
+                            <text x="210" y="195" fill="var(--text-muted)" font-size="8" text-anchor="middle">t = 0 (无效应)</text>
+                            <text x="140" y="195" fill="#ef4444" font-size="8" text-anchor="middle">-1.96</text>
+                            <text x="280" y="195" fill="#ef4444" font-size="8" text-anchor="middle">+1.96</text>
+                        </svg>
+                    </div>
+
+                    <!-- 置信区间覆盖度体检沙盒 -->
+                    <div class="glass-card full-width">
+                        <div class="card-header">
+                            <span class="card-title">🎯 20个随机宇宙置信区间（CI）覆盖体检（真实效应等于0）</span>
+                            <div class="ci-chart-legend">
+                                <div class="ci-legend-item"><div class="ci-dot success"></div><span>捕获真实 0 (诚实)</span></div>
+                                <div class="ci-legend-item"><div class="ci-dot fail"></div><span>错失真实 0 (假阳性)</span></div>
+                            </div>
+                        </div>
+                        
+                        <!-- 置信区间绘制区域 -->
+                        <svg id="ci-svg" style="width: 100%; height: 260px; background: rgba(255,255,255,0.01); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);" viewBox="0 0 800 260">
+                            <!-- 黄金 0 线 -->
+                            <line x1="400" y1="10" x2="400" y2="240" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2"></line>
+                            <text x="400" y="252" fill="var(--text-secondary)" font-size="9" text-anchor="middle">真实效应 &beta; = 0</text>
+                            
+                            <!-- 区间绘制区 -->
+                            <g id="ci-elements-group"></g>
+                        </svg>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- TAB 3: 🚀 前沿体检与拓展 -->
+            <div id="tab-frontiers" class="content-panel">
+                <div class="glass-card">
+                    <div class="academic-doc">
+                        <h1 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1.25rem; color: #fff;">🚀 实证前沿：当常规聚类标准误也失效时</h1>
+                        
+                        <p class="academic-p">
+                            虽然聚类标准误（Clustered SEs）完美攻克了面板序列自相关问题，但计量经济学前沿研究发现，在一些极端边界条件下，常规聚类标准误同样会面临推断失效：
+                        </p>
+
+                        <div class="frontier-grid">
+                            
+                            <!-- 前沿 1: 小样本聚类 -->
+                            <div class="glass-card" style="background: rgba(255,255,255,0.02);">
+                                <div class="frontier-badge">边界突破 1：小样本群组 (G &lt; 30)</div>
+                                <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">为什么失效？</h3>
+                                <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5;">
+                                    聚类标准误的有效性依赖于“渐近大样本理论”（要求组数 $G \to \infty$）。当聚类组数太少（如仅有 10 个省份）时，CRVE 对残差方差的估计存在向下的偏差，导致假阳性率再次抬头。
+                                </p>
+                                <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-wild);">前沿对策：Wild Cluster Bootstrap</h3>
+                                <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5;">
+                                    利用当前估计的残差，通过“抛硬币（拉德马赫权重）”人工构造数千个高质量的“仿生平行宇宙”，在小样本甚至只有一个治疗组省份的情况下，依然能实现完美的 5% 拒绝率。
+                                </p>
+                            </div>
+
+                            <!-- 前沿 2: 双重聚类 -->
+                            <div class="glass-card" style="background: rgba(255,255,255,0.02);">
+                                <div class="frontier-badge">边界突破 2：多维重叠关联</div>
+                                <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">为什么失效？</h3>
+                                <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5;">
+                                    很多时候残差不仅在省份（个体）内部相关，在年份上（例如特定年份爆发金融危机、疫情等系统冲击）也存在交叉相关。如果只按省份进行聚类，依然会低估年份层面的系统共震。
+                                </p>
+                                <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-twoway);">前沿对策：双重聚类 (Two-way Cluster)</h3>
+                                <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5;">
+                                    由 Cameron, Gelbach, and Miller (2011) 提出，通过同时在省份和年份两个维度对协方差矩阵对角块进行松绑解放：$V_{2way} = V_{id} + V_{time} - V_{id \cap time}$，从时空双维度锁死推断漏洞。
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ==========================================================================
+         💻 高性能 JS 仿真计算核心引擎
+         ========================================================================== -->
+    <script>
+        // Box-Muller 变换生成标准正态随机数
+        function randomNormal() {
+            let u = 0, v = 0;
+            while(u === 0) u = Math.random(); 
+            while(v === 0) v = Math.random();
+            return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+        }
+
+        // T分布单侧/双侧累积分布的快速数值逼近 (提供p-value)
+        function studentTcdf(t, df) {
+            t = Math.abs(t);
+            // 经典高斯积分或极简多项式近似进行 p 值映射
+            let x = df / (df + t * t);
+            // 简单而鲁棒的累积正态分布逼近 (针对仿真快速迭代)
+            let z = t * (1 - 1 / (4 * df));
+            let p = 0.5 * (1.0 + erf(z / Math.sqrt(2.0)));
+            return p;
+        }
+
+        function erf(x) {
+            let a1 =  0.254829592;
+            let a2 = -0.284496736;
+            let a3 =  1.421413741;
+            let a4 = -1.453152027;
+            let a5 =  1.061405429;
+            let p  =  0.3275911;
+            let sign = 1;
+            if (x < 0) { sign = -1; x = -x; }
+            let t = 1.0 / (1.0 + p * x);
+            let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+            return sign * y;
+        }
+
+        // 标签切换
+        function switchTab(tabId) {
+            document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            // 获取对应的按钮
+            let btnIndex = 0;
+            if (tabId === 'tab-sim') btnIndex = 1;
+            if (tabId === 'tab-frontiers') btnIndex = 2;
+            document.querySelectorAll('.nav-tab')[btnIndex].classList.add('active');
+        }
+
+        // 滑块值同步
+        const sliderRho = document.getElementById('param-rho');
+        const sliderNsim = document.getElementById('param-nsim');
+        const sliderNgroups = document.getElementById('param-ngroups');
+        const sliderNunits = document.getElementById('param-nunits');
+
+        sliderRho.addEventListener('input', () => document.getElementById('val-rho').innerText = parseFloat(sliderRho.value).toFixed(2));
+        sliderNsim.addEventListener('input', () => document.getElementById('val-nsim').innerText = sliderNsim.value);
+        sliderNgroups.addEventListener('input', () => document.getElementById('val-ngroups').innerText = sliderNgroups.value);
+        sliderNunits.addEventListener('input', () => document.getElementById('val-nunits').innerText = sliderNunits.value);
+
+        // 核心仿真变量缓存，用于可视化曲线和置信区间绘制
+        let simResultsCache = null;
+
+        // 触发模拟 (具有动画和进度反馈)
+        function triggerSimulation() {
+            // 切页到沙盒
+            switchTab('tab-sim');
+            
+            const btn = document.querySelector('.btn-run');
+            const progressContainer = document.getElementById('sim-progress-container');
+            const progressBar = document.getElementById('sim-progress-bar');
+            
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '0%';
+            
+            const rho = parseFloat(sliderRho.value);
+            const nSims = parseInt(sliderNsim.value);
+            const nGroups = parseInt(sliderNgroups.value);
+            const nUnits = parseInt(sliderNunits.value);
+            const nPeriods = 10;
+            const nTotal = nGroups * nUnits;
+            
+            let currentSim = 0;
+            
+            let pIidList = [];
+            let pRobustList = [];
+            let pClusterList = [];
+            
+            let tIidList = [];
+            let tClusterList = [];
+            
+            let ciList = []; // 存储前20个区间的[se_iid, beta_hat, lower, upper, isSuccess]
+            
+            // 采用分段 setTimeout 运行，避免 UI 挂死，实现进度微动画
+            function step() {
+                const chunkSize = Math.max(5, Math.floor(nSims / 10));
+                for(let k = 0; k < chunkSize && currentSim < nSims; k++) {
+                    
+                    // 1. 生成面板误差 AR(1) 自相关
+                    let eps = [];
+                    for(let i = 0; i < nTotal; i++) {
+                        let row = new Array(nPeriods);
+                        row[0] = randomNormal();
+                        for(let t = 1; t < nPeriods; t++) {
+                            row[t] = rho * row[t - 1] + randomNormal();
+                        }
+                        eps.push(row);
+                    }
+                    
+                    // 2. 构造虚拟政策矩阵 D (随机分配20%的省份省份有政策，时间在t>=5发生)
+                    let groupIds = [];
+                    for(let g = 0; g < nGroups; g++) {
+                        for(let u = 0; u < nUnits; u++) {
+                            groupIds.push(g);
+                        }
+                    }
+                    
+                    let treatedGroups = new Set();
+                    const nTreated = Math.max(1, Math.floor(nGroups / 5));
+                    while(treatedGroups.size < nTreated) {
+                        treatedGroups.add(Math.floor(Math.random() * nGroups));
+                    }
+                    
+                    let D = [];
+                    for(let i = 0; i < nTotal; i++) {
+                        let row = new Array(nPeriods).fill(0);
+                        if(treatedGroups.has(groupIds[i])) {
+                            for(let t = 4; t < nPeriods; t++) row[t] = 1;
+                        }
+                        D.push(row);
+                    }
+                    
+                    // 3. 观测 Y (真实政策效应 beta = 0)
+                    let Y = [];
+                    for(let i = 0; i < nTotal; i++) {
+                        let row = new Array(nPeriods);
+                        let u_i = randomNormal(); // 个体固定效应
+                        for(let t = 0; t < nPeriods; t++) {
+                            row[t] = u_i + eps[i][t]; // Y = u_i + 0 * D_it + eps
+                        }
+                        Y.push(row);
+                    }
+                    
+                    // 4. 双向去均值 (Within-panel 去除固定效应)
+                    let Y_mean_i = Y.map(row => row.reduce((a,b)=>a+b, 0) / nPeriods);
+                    let Y_mean_t = new Array(nPeriods).fill(0);
+                    for(let t=0; t<nPeriods; t++) {
+                        let sum = 0;
+                        for(let i=0; i<nTotal; i++) sum += Y[i][t];
+                        Y_mean_t[t] = sum / nTotal;
+                    }
+                    let Y_grand_mean = Y_mean_i.reduce((a,b)=>a+b, 0) / nTotal;
+                    
+                    let D_mean_i = D.map(row => row.reduce((a,b)=>a+b, 0) / nPeriods);
+                    let D_mean_t = new Array(nPeriods).fill(0);
+                    for(let t=0; t<nPeriods; t++) {
+                        let sum = 0;
+                        for(let i=0; i<nTotal; i++) sum += D[i][t];
+                        D_mean_t[t] = sum / nTotal;
+                    }
+                    let D_grand_mean = D_mean_i.reduce((a,b)=>a+b, 0) / nTotal;
+                    
+                    let y_dm = [], x_dm = [];
+                    for(let i=0; i<nTotal; i++) {
+                        for(let t=0; t<nPeriods; t++) {
+                            y_dm.push(Y[i][t] - Y_mean_i[i] - Y_mean_t[t] + Y_grand_mean);
+                            x_dm.push(D[i][t] - D_mean_i[i] - D_mean_t[t] + D_grand_mean);
+                        }
+                    }
+                    
+                    // 5. OLS 估计 Policy Beta
+                    let num = 0, den = 0;
+                    for(let j=0; j<y_dm.length; j++) {
+                        num += x_dm[j] * y_dm[j];
+                        den += x_dm[j] * x_dm[j];
+                    }
+                    let betaHat = num / den;
+                    
+                    // 计算残差
+                    let resid = new Array(y_dm.length);
+                    for(let j=0; j<y_dm.length; j++) {
+                        resid[j] = y_dm[j] - betaHat * x_dm[j];
+                    }
+                    
+                    let df = nTotal * nPeriods - nTotal - nPeriods; // 考虑双向去均值自由度调整
+                    
+                    // ----------------------------------------------------
+                    // 6. iid 标准误
+                    // ----------------------------------------------------
+                    let sumResSq = resid.reduce((a,b)=>a + b*b, 0);
+                    let sigmaSq_iid = sumResSq / df;
+                    let se_iid = Math.sqrt(sigmaSq_iid / den);
+                    let t_iid = betaHat / se_iid;
+                    let p_iid = 2 * (1 - studentTcdf(t_iid, df));
+                    
+                    // ----------------------------------------------------
+                    // 7. HC1 稳健标准误 (Huber-White)
+                    // ----------------------------------------------------
+                    let sumRobust = 0;
+                    for(let j=0; j<y_dm.length; j++) {
+                        sumRobust += Math.pow(x_dm[j] * resid[j], 2);
+                    }
+                    let scale = (nTotal * nPeriods) / df;
+                    let se_robust = Math.sqrt(sumRobust * scale) / den;
+                    let t_robust = betaHat / se_robust;
+                    let p_robust = 2 * (1 - studentTcdf(t_robust, df));
+                    
+                    // ----------------------------------------------------
+                    // 8. 组内聚类标准误 (Cluster by Group Level)
+                    // ----------------------------------------------------
+                    let groupScores = new Array(nGroups).fill(0);
+                    for(let j=0; j<y_dm.length; j++) {
+                        // 推断属于哪个 group
+                        let obsIndex = j;
+                        let unitIndex = Math.floor(obsIndex / nPeriods);
+                        let groupIndex = groupIds[unitIndex];
+                        groupScores[groupIndex] += x_dm[j] * resid[j];
+                    }
+                    let sumCluster = groupScores.reduce((a,b)=>a + b*b, 0);
+                    let clusterScale = nGroups / (nGroups - 1);
+                    let se_cluster = Math.sqrt(sumCluster * clusterScale) / den;
+                    let t_cluster = betaHat / se_cluster;
+                    let p_cluster = 2 * (1 - studentTcdf(t_cluster, nGroups - 1));
+                    
+                    pIidList.push(p_iid);
+                    pRobustList.push(p_robust);
+                    pClusterList.push(p_cluster);
+                    
+                    tIidList.push(t_iid);
+                    tClusterList.push(t_cluster);
+                    
+                    // 留档前 20 个区间的置信区间以在底部绘图
+                    if (currentSim < 20) {
+                        let ciWidth = 1.96 * se_iid;
+                        let lower = betaHat - ciWidth;
+                        let upper = betaHat + ciWidth;
+                        let isSuccess = (lower <= 0 && upper >= 0);
+                        ciList.push({ betaHat, lower, upper, isSuccess });
+                    }
+                    
+                    currentSim++;
+                }
+                
+                progressBar.style.width = (currentSim / nSims * 100) + '%';
+                
+                if(currentSim < nSims) {
+                    setTimeout(step, 0);
+                } else {
+                    // 模拟完全结束，渲染图表！
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                    progressContainer.style.display = 'none';
+                    
+                    renderVisuals(pIidList, pRobustList, pClusterList, tIidList, tClusterList, ciList);
+                }
+            }
+            
+            setTimeout(step, 0);
+        }
+
+        // 渲染图表组件
+        function renderVisuals(pIid, pRobust, pCluster, tIid, tCluster, ciList) {
+            // 1. 柱状图更新真实拒绝率
+            let rejIid = (pIid.filter(p => p < 0.05).length / pIid.length * 100);
+            let rejRobust = (pRobust.filter(p => p < 0.05).length / pRobust.length * 100);
+            let rejCluster = (pCluster.filter(p => p < 0.05).length / pCluster.length * 100);
+            
+            document.getElementById('bar-iid').style.width = `${Math.min(rejIid, 100)}%`;
+            document.getElementById('val-bar-iid').innerText = `${rejIid.toFixed(1)}%`;
+            
+            document.getElementById('bar-robust').style.width = `${Math.min(rejRobust, 100)}%`;
+            document.getElementById('val-bar-robust').innerText = `${rejRobust.toFixed(1)}%`;
+            
+            document.getElementById('bar-cluster').style.width = `${Math.min(rejCluster, 100)}%`;
+            document.getElementById('val-bar-cluster').innerText = `${rejCluster.toFixed(1)}%`;
+
+            // 2. 拟合并更新 t 统计量 PDF 曲线绘制
+            drawTDistribution(tIid, tCluster);
+            
+            // 3. 绘制置信区间
+            drawConfidenceIntervals(ciList);
+        }
+
+        // 利用 SVG 路径逼近核密度图并绘制
+        function drawTDistribution(tIid, tCluster) {
+            const svg = document.getElementById('t-dist-svg');
+            
+            // 核密度逼近辅助函数
+            function kernelDensityEstimator(kernel, x) {
+                return function(sample) {
+                    return x.map(function(v) {
+                        return {x: v, y: sample.reduce((a,b)=>a + kernel(v - b), 0) / sample.length};
+                    });
+                };
+            }
+            
+            function epanechnikovKernel(scale) {
+                return function(v) {
+                    v /= scale;
+                    return Math.abs(v) <= 1 ? 0.75 * (1 - v * v) / scale : 0;
+                };
+            }
+            
+            // 生成采样点 x坐标在 -4.5 到 4.5 之间分布
+            let xPoints = [];
+            for (let i = 0; i <= 80; i++) {
+                xPoints.push(-4.5 + i * 9.0 / 80.0);
+            }
+            
+            let kde = kernelDensityEstimator(epanechnikovKernel(0.6), xPoints);
+            let densityIid = kde(tIid);
+            let densityCluster = kde(tCluster);
+            
+            // 映射到 SVG 坐标 (Width: 400, Height: 220, X范围:50-370, Y范围:180-20)
+            function toSvgCoords(points) {
+                let maxVal = Math.max(...points.map(p => p.y));
+                if (maxVal === 0) maxVal = 0.5;
+                
+                return points.map(p => {
+                    let svgX = 50 + (p.x + 4.5) * 320 / 9.0;
+                    let svgY = 180 - (p.y * 150 / 0.45); // 固定最大高度对应到 pdf 0.45
+                    return `${svgX},${svgY}`;
+                });
+            }
+            
+            // 构造标准正态基准曲线路径
+            let normalPoints = xPoints.map(x => {
+                let y = (1.0 / Math.sqrt(2 * Math.PI)) * Math.exp(-0.5 * x * x);
+                return {x, y};
+            });
+            
+            let coordsNormal = toSvgCoords(normalPoints);
+            document.getElementById('path-normal').setAttribute('d', `M ${coordsNormal.join(' L ')}`);
+            
+            let coordsIid = toSvgCoords(densityIid);
+            document.getElementById('path-t-iid').setAttribute('d', `M ${coordsIid.join(' L ')}`);
+            
+            let coordsCluster = toSvgCoords(densityCluster);
+            document.getElementById('path-t-cluster').setAttribute('d', `M ${coordsCluster.join(' L ')}`);
+        }
+
+        // 绘制置信区间分布
+        function drawConfidenceIntervals(ciList) {
+            const group = document.getElementById('ci-elements-group');
+            group.innerHTML = ''; // 清空
+            
+            // Y范围: 20 到 220，平分给20个区间
+            let yStep = 200 / 20;
+            
+            ciList.forEach((ci, idx) => {
+                let y = 20 + idx * yStep;
+                
+                // X轴映射： beta=-1.5映射到100，beta=1.5映射到700，beta=0刚好是400
+                // 缩放系数: (400 - 100) / 1.5 = 200像素单位1效应
+                let xCenter = 400 + ci.betaHat * 200;
+                let xLower = 400 + ci.lower * 200;
+                let xUpper = 400 + ci.upper * 200;
+                
+                // 限制边界值防止溢出 SVG 视图
+                xLower = Math.max(80, xLower);
+                xUpper = Math.min(720, xUpper);
+                
+                let colorClass = ci.isSuccess ? 'var(--color-wild)' : 'var(--color-iid)';
+                let glowEffect = ci.isSuccess ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.2)';
+                
+                // 1. 绘制发光阴影背景
+                let shadowLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                shadowLine.setAttribute('x1', xLower);
+                shadowLine.setAttribute('y1', y);
+                shadowLine.setAttribute('x2', xUpper);
+                shadowLine.setAttribute('y2', y);
+                shadowLine.setAttribute('stroke', glowEffect);
+                shadowLine.setAttribute('stroke-width', '8');
+                shadowLine.setAttribute('stroke-linecap', 'round');
+                group.appendChild(shadowLine);
+
+                // 2. 绘制实际置信区间线
+                let line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', xLower);
+                line.setAttribute('y1', y);
+                line.setAttribute('x2', xUpper);
+                line.setAttribute('y2', y);
+                line.setAttribute('stroke', colorClass);
+                line.setAttribute('stroke-width', '2.5');
+                line.setAttribute('stroke-linecap', 'round');
+                group.appendChild(line);
+                
+                // 3. 绘制两个边界端点小竖条
+                let barL = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                barL.setAttribute('x1', xLower); barL.setAttribute('y1', y - 4);
+                barL.setAttribute('x2', xLower); barL.setAttribute('y2', y + 4);
+                barL.setAttribute('stroke', colorClass); barL.setAttribute('stroke-width', '2');
+                group.appendChild(barL);
+                
+                let barR = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                barR.setAttribute('x1', xUpper); barR.setAttribute('y1', y - 4);
+                barR.setAttribute('x2', xUpper); barR.setAttribute('y2', y + 4);
+                barR.setAttribute('stroke', colorClass); barR.setAttribute('stroke-width', '2');
+                group.appendChild(barR);
+
+                // 4. 绘制中心估计值点 beta_hat
+                let dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                dot.setAttribute('cx', xCenter);
+                dot.setAttribute('cy', y);
+                dot.setAttribute('r', '4');
+                dot.setAttribute('fill', '#ffffff');
+                dot.setAttribute('stroke', colorClass);
+                dot.setAttribute('stroke-width', '2.5');
+                group.appendChild(dot);
+            });
+        }
+
+        // 初始化运行一次默认模拟
+        window.addEventListener('load', () => {
+            triggerSimulation();
+        });
+    </script>
+</body>
+</html>
