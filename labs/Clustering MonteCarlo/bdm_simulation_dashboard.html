@@ -688,10 +688,10 @@
             <details class="premium-details" style="margin-top: 1.25rem; margin-bottom: 0; padding: 0.5rem 0.75rem; background: rgba(255, 255, 255, 0.01);">
                 <summary class="premium-summary" style="font-size: 0.75rem; color: var(--text-secondary);">⚙️ 参数设定注解</summary>
                 <div class="details-content" style="font-size: 0.75rem; line-height: 1.4; color: var(--text-muted); padding-top: 0.5rem;">
-                    <p style="margin-bottom: 0.5rem;"><strong style="color: var(--color-cluster);">AR(1) ρ</strong>：自相关强度。值越大，残差随时间累积的“粘性”和依赖度越强，是导致OLS标准误偏小的根源。支持输入负值观察过度保守现象。</p>
+                    <p style="margin-bottom: 0.5rem;"><strong style="color: var(--color-cluster);">AR(1) &rho;</strong>：自相关强度。值越大，残差随时间累积的“粘性”和依赖度越强，是导致OLS标准误偏小的根源。支持输入负值观察过度保守现象。</p>
                     <p style="margin-bottom: 0.5rem;"><strong style="color: var(--color-cluster);">模拟次数</strong>：平行宇宙的数量。高数值（如500次以上）将提供极为平滑精确的核密度与拒绝率估计，低数值则能瞬间渲染完成。</p>
-                    <p style="margin-bottom: 0.5rem;"><strong style="color: var(--color-cluster);">省份组数 (G)</strong>：即聚类组数。渐近聚类要求 $G \to \infty$。在此输入极小值（如 G=3）可直观见证小样本偏误下聚类标准误如何也发生崩塌。</p>
-                    <p><strong style="color: var(--color-cluster);">每组观测数量 (N)</strong>：每个省份内部微观观测体的样本数量。</p>
+                    <p style="margin-bottom: 0.5rem;"><strong style="color: var(--color-cluster);">省份组数 (<em>G</em>)</strong>：即聚类组数。渐近聚类要求 <em>G</em> &rarr; &infin;。在此输入极小值（如 G=3）可直观见证小样本偏误下聚类标准误如何也发生崩塌。</p>
+                    <p><strong style="color: var(--color-cluster);">每组观测数量 (<em>N</em>)</strong>：每个省份内部微观观测体的样本数量。</p>
                 </div>
             </details>
         </div>
@@ -777,10 +777,10 @@
                         🧪 蒙特卡洛平行宇宙实验设定与思路
                     </h3>
                     <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem; text-align: justify; line-height: 1.6;">
-                        <strong>实验设定</strong>：本实验室旨在通过计算机在几毫秒内推演出多达数百个“平行宇宙（即 Monte Carlo 模拟迭代）”。在每个宇宙的数据生成过程 (DGP) 中，我们人为且明确地定死<strong>真实政策效应等于 0</strong>（即政策是一剂完全无效的生理盐水，零假设 $H_0: \beta = 0$ 绝对成立）。
+                        <strong>实验设定</strong>：本实验室旨在通过计算机在几毫秒内推演出多达数百个“平行宇宙（即 Monte Carlo 模拟迭代）”。在每个宇宙的数据生成过程 (DGP) 中，我们人为且明确地定死<strong>真实政策效应等于 0</strong>（即政策是一剂完全无效的生理盐水，零假设 <em>H</em><sub>0</sub>: &beta; = 0 绝对成立）。
                     </p>
                     <p style="font-size: 0.875rem; color: var(--text-secondary); text-align: justify; line-height: 1.6; margin-bottom: 0.75rem;">
-                        <strong>实验思路</strong>：当研究者设定显著性水平为 <strong>5%</strong> 时，意味着他们允许 5% 的统计推断出现假阳性（误诊）。如果一个标准误估计方法是正确且诚实的，那么在数百个宇宙中，它应该<strong>有且仅有大约 5% 的比例</strong>错误地拒绝零假设（宣称政策有用）。通过拖动左侧面板的 <strong>AR(1) 自相关系数 $\rho$</strong>，我们人为制造时序残留记忆的强弱，直观检验经典OLS (IID)、稳健标准误 (HC1) 以及省份级聚类标准误 (Cluster) 对这 5% 显著水平的防守能力，亲眼见证 BDM (2004) 中 45% 过度拒绝的震撼效应。
+                        <strong>实验思路</strong>：当研究者设定显著性水平为 <strong>5%</strong> 时，意味着他们允许 5% 的统计推断出现假阳性（误诊）。如果一个标准误估计方法是正确且诚实的，那么在数百个宇宙中，它应该<strong>有且仅有大约 5% 的比例</strong>错误地拒绝零假设（宣称政策有用）。通过拖动左侧面板的 <strong>AR(1) 自相关系数 &rho;</strong>，我们人为制造时序残留记忆的强弱，直观检验经典OLS (IID)、稳健标准误 (HC1) 以及省份级聚类标准误 (Cluster) 对这 5% 显著水平的防守能力，亲眼见证 BDM (2004) 中 45% 过度拒绝的震撼效应。
                     </p>
 
                     <!-- 数据生成过程 (DGP) 折叠层 -->
@@ -816,7 +816,7 @@
                                 </li>
                                 <li style="margin-bottom: 0.5rem;">
                                     <strong>去双向固定效应估计</strong>：
-                                    对数据进行双向去均值（Within-panel Transformation），消除个体固定效应 u<sub>i</sub> 与时间趋势，然后基于普通最小二乘法 (OLS) 估计政策系数 &hat;&beta; 并计算对应标准误，从而完成一次平行宇宙的推演。
+                                    对数据进行双向去均值（Within-panel Transformation），消除个体固定效应 u<sub>i</sub> 与时间趋势，然后基于普通最小二乘法 (OLS) 估计政策系数 &beta;&#770; 并计算对应标准误，从而完成一次平行宇宙的推演。
                                 </li>
                             </ol>
                         </div>
@@ -870,8 +870,8 @@
                         <details class="premium-details" style="margin-top: 0.5rem; margin-bottom: 0; padding: 0.4rem 0.6rem;">
                             <summary class="premium-summary" style="font-size: 0.75rem; color: var(--text-secondary);">💡 拒绝率对比解读</summary>
                             <div class="details-content" style="font-size: 0.75rem; line-height: 1.4; padding-top: 0.4rem;">
-                                <p style="margin-bottom: 0.4rem;"><strong>窗口含义</strong>：展示在多轮模拟中，判定零假设 $\beta = 0$ “显著不成立”的宇宙比例。因为真实效应为0，此处即为<strong>实际假阳性率（误诊率）</strong>。</p>
-                                <p><strong>直觉诊断</strong>：名义合理线为 5%（绿线）。当自相关 $\rho = 0.8$ 时，经典 OLS 与稳健标准误因漏估自相关残差，使其拒绝率高达 35%~45%，谎报军情；只有聚类标准误能够把假阳性率压制在 5% 上下，实现诚实推断。</p>
+                                <p style="margin-bottom: 0.4rem;"><strong>窗口含义</strong>：展示在多轮模拟中，判定零假设 &beta; = 0 “显著不成立”的宇宙比例。因为真实效应为0，此处即为<strong>实际假阳性率（误诊率）</strong>。</p>
+                                <p><strong>直觉诊断</strong>：名义合理线为 5%（绿线）。当自相关 &rho; = 0.8 时，经典 OLS 与稳健标准误因漏估自相关残差，使其拒绝率高达 35%~45%，谎报军情；只有聚类标准误能够把假阳性率压制在 5% 上下，实现诚实推断。</p>
                             </div>
                         </details>
                     </div>
