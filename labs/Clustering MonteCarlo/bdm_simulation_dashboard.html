@@ -272,6 +272,52 @@
             transition: width 0.1s linear;
         }
 
+        /* Collapsible details component */
+        .premium-details {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+            transition: var(--transition-smooth);
+        }
+        .premium-details[open] {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .premium-summary {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .premium-summary::-webkit-details-marker {
+            display: none;
+        }
+        .premium-summary::before {
+            content: '▶';
+            font-size: 0.75rem;
+            color: var(--color-cluster);
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+        .premium-details[open] .premium-summary::before {
+            transform: rotate(90deg);
+        }
+        .details-content {
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 0.75rem;
+        }
+
         /* ==========================================================================
            📊 主展示面板 (Main Panel Contents)
            ========================================================================== */
@@ -637,6 +683,17 @@
             <div class="progress-bar-container" id="sim-progress-container">
                 <div class="progress-bar" id="sim-progress-bar"></div>
             </div>
+
+            <!-- 参数设置解释 (折叠) -->
+            <details class="premium-details" style="margin-top: 1.25rem; margin-bottom: 0; padding: 0.5rem 0.75rem; background: rgba(255, 255, 255, 0.01);">
+                <summary class="premium-summary" style="font-size: 0.75rem; color: var(--text-secondary);">⚙️ 参数设定注解</summary>
+                <div class="details-content" style="font-size: 0.75rem; line-height: 1.4; color: var(--text-muted); padding-top: 0.5rem;">
+                    <p style="margin-bottom: 0.5rem;"><strong style="color: var(--color-cluster);">AR(1) ρ</strong>：自相关强度。值越大，残差随时间累积的“粘性”和依赖度越强，是导致OLS标准误偏小的根源。支持输入负值观察过度保守现象。</p>
+                    <p style="margin-bottom: 0.5rem;"><strong style="color: var(--color-cluster);">模拟次数</strong>：平行宇宙的数量。高数值（如500次以上）将提供极为平滑精确的核密度与拒绝率估计，低数值则能瞬间渲染完成。</p>
+                    <p style="margin-bottom: 0.5rem;"><strong style="color: var(--color-cluster);">省份组数 (G)</strong>：即聚类组数。渐近聚类要求 $G \to \infty$。在此输入极小值（如 G=3）可直观见证小样本偏误下聚类标准误如何也发生崩塌。</p>
+                    <p><strong style="color: var(--color-cluster);">每组观测数量 (N)</strong>：每个省份内部微观观测体的样本数量。</p>
+                </div>
+            </details>
         </div>
 
         <!-- 右侧主内容展示面板 -->
@@ -713,93 +770,140 @@
 
             <!-- TAB 2: 🧪 仿真交互沙盒 -->
             <div id="tab-sim" class="content-panel">
+                
+                <!-- 🧪 蒙特卡洛实验设定与实验思路 (直观呈现，不折叠) -->
+                <div class="glass-card" style="margin-bottom: 1.5rem; background: rgba(59, 130, 246, 0.03); border-color: rgba(59, 130, 246, 0.15);">
+                    <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 0.75rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                        🧪 蒙特卡洛平行宇宙实验设定与思路
+                    </h3>
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem; text-align: justify; line-height: 1.6;">
+                        <strong>实验设定</strong>：本实验室旨在通过计算机在几毫秒内推演出多达数百个“平行宇宙（即 Monte Carlo 模拟迭代）”。在每个宇宙的数据生成过程 (DGP) 中，我们人为且明确地定死<strong>真实政策效应等于 0</strong>（即政策是一剂完全无效的生理盐水，零假设 $H_0: \beta = 0$ 绝对成立）。
+                    </p>
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); text-align: justify; line-height: 1.6;">
+                        <strong>实验思路</strong>：当研究者设定显著性水平为 <strong>5%</strong> 时，意味着他们允许 5% 的统计推断出现假阳性（误诊）。如果一个标准误估计方法是正确且诚实的，那么在数百个宇宙中，它应该<strong>有且仅有大约 5% 的比例</strong>错误地拒绝零假设（宣称政策有用）。通过拖动左侧面板的 <strong>AR(1) 自相关系数 $\rho$</strong>，我们人为制造时序残留记忆的强弱，直观检验经典OLS (IID)、稳健标准误 (HC1) 以及省份级聚类标准误 (Cluster) 对这 5% 显著水平的防守能力，亲眼见证 BDM (2004) 中 45% 过度拒绝的震撼效应。
+                    </p>
+                </div>
+
                 <div class="grid-visuals">
                     
                     <!-- 拒绝率动态柱状图 -->
-                    <div class="glass-card">
-                        <div class="card-header">
-                            <span class="card-title">📊 平行宇宙真实拒绝率对比（名义显性 5%）</span>
-                        </div>
-                        <div class="chart-bar-container" style="height: 220px; position: relative;">
-                            
-                            <!-- 名义显著性 5% 警戒线 -->
-                            <div class="nominal-line-marker"></div>
-                            <div class="nominal-line-text">标称 5% 显著水平</div>
-                            
-                            <!-- 行 1: IID -->
-                            <div class="chart-row">
-                                <div class="chart-row-label" style="color: var(--color-iid);">IID 经典标准误</div>
-                                <div class="chart-row-bar-track">
-                                    <div class="chart-row-bar-fill" id="bar-iid" style="background: var(--color-iid);"></div>
-                                </div>
-                                <div class="chart-row-value" id="val-bar-iid" style="color: var(--color-iid);">0.0%</div>
+                    <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div class="card-header" style="margin-bottom: 1rem;">
+                                <span class="card-title">📊 平行宇宙真实拒绝率对比（名义显性 5%）</span>
                             </div>
+                            <div class="chart-bar-container" style="height: 180px; position: relative; margin-bottom: 0.5rem;">
+                                
+                                <!-- 名义显著性 5% 警戒线 -->
+                                <div class="nominal-line-marker"></div>
+                                <div class="nominal-line-text">标称 5% 显著水平</div>
+                                
+                                <!-- 行 1: IID -->
+                                <div class="chart-row">
+                                    <div class="chart-row-label" style="color: var(--color-iid); font-size: 0.75rem;">IID 经典标准误</div>
+                                    <div class="chart-row-bar-track">
+                                        <div class="chart-row-bar-fill" id="bar-iid" style="background: var(--color-iid);"></div>
+                                    </div>
+                                    <div class="chart-row-value" id="val-bar-iid" style="color: var(--color-iid);">0.0%</div>
+                                </div>
 
-                            <!-- 行 2: Robust -->
-                            <div class="chart-row">
-                                <div class="chart-row-label" style="color: var(--color-robust);">HC1 稳健标准误</div>
-                                <div class="chart-row-bar-track">
-                                    <div class="chart-row-bar-fill" id="bar-robust" style="background: var(--color-robust);"></div>
+                                <!-- 行 2: Robust -->
+                                <div class="chart-row">
+                                    <div class="chart-row-label" style="color: var(--color-robust); font-size: 0.75rem;">HC1 稳健标准误</div>
+                                    <div class="chart-row-bar-track">
+                                        <div class="chart-row-bar-fill" id="bar-robust" style="background: var(--color-robust);"></div>
+                                    </div>
+                                    <div class="chart-row-value" id="val-bar-robust" style="color: var(--color-robust);">0.0%</div>
                                 </div>
-                                <div class="chart-row-value" id="val-bar-robust" style="color: var(--color-robust);">0.0%</div>
-                            </div>
 
-                            <!-- 行 3: Cluster -->
-                            <div class="chart-row">
-                                <div class="chart-row-label" style="color: var(--color-cluster);">省份级单向聚类</div>
-                                <div class="chart-row-bar-track">
-                                    <div class="chart-row-bar-fill" id="bar-cluster" style="background: var(--color-cluster);"></div>
+                                <!-- 行 3: Cluster -->
+                                <div class="chart-row">
+                                    <div class="chart-row-label" style="color: var(--color-cluster); font-size: 0.75rem;">省份级单向聚类</div>
+                                    <div class="chart-row-bar-track">
+                                        <div class="chart-row-bar-fill" id="bar-cluster" style="background: var(--color-cluster);"></div>
+                                    </div>
+                                    <div class="chart-row-value" id="val-bar-cluster" style="color: var(--color-cluster);">0.0%</div>
                                 </div>
-                                <div class="chart-row-value" id="val-bar-cluster" style="color: var(--color-cluster);">0.0%</div>
                             </div>
                         </div>
+
+                        <!-- 拒绝率折叠图注 (折叠) -->
+                        <details class="premium-details" style="margin-top: 0.5rem; margin-bottom: 0; padding: 0.4rem 0.6rem;">
+                            <summary class="premium-summary" style="font-size: 0.75rem; color: var(--text-secondary);">💡 拒绝率对比解读</summary>
+                            <div class="details-content" style="font-size: 0.75rem; line-height: 1.4; padding-top: 0.4rem;">
+                                <p style="margin-bottom: 0.4rem;"><strong>窗口含义</strong>：展示在多轮模拟中，判定零假设 $\beta = 0$ “显著不成立”的宇宙比例。因为真实效应为0，此处即为<strong>实际假阳性率（误诊率）</strong>。</p>
+                                <p><strong>直觉诊断</strong>：名义合理线为 5%（绿线）。当自相关 $\rho = 0.8$ 时，经典 OLS 与稳健标准误因漏估自相关残差，使其拒绝率高达 35%~45%，谎报军情；只有聚类标准误能够把假阳性率压制在 5% 上下，实现诚实推断。</p>
+                            </div>
+                        </details>
                     </div>
 
                     <!-- t统计量经验分布与胖尾渲染 -->
-                    <div class="glass-card">
-                        <div class="card-header">
-                            <span class="card-title">📈 t 统计量经验分布拟合（直观展示胖尾）</span>
+                    <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div class="card-header" style="margin-bottom: 1rem;">
+                                <span class="card-title">📈 t 统计量经验分布拟合（直观展示胖尾）</span>
+                            </div>
+                            <svg class="svg-chart" id="t-dist-svg" viewBox="0 0 400 220" style="height: 180px;">
+                                <!-- 坐标轴 -->
+                                <line x1="50" y1="180" x2="370" y2="180" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"></line>
+                                <line x1="210" y1="20" x2="210" y2="180" stroke="rgba(255,255,255,0.1)" stroke-dasharray="3,3"></line>
+                                <!-- 临界线 ±1.96 -->
+                                <line x1="140" y1="20" x2="140" y2="180" stroke="#ef4444" stroke-dasharray="2,2" opacity="0.6"></line>
+                                <line x1="280" y1="20" x2="280" y2="180" stroke="#ef4444" stroke-dasharray="2,2" opacity="0.6"></line>
+                                <!-- 标准正态曲线背景 (Dotted grey) -->
+                                <path id="path-normal" d="" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-dasharray="3,3"></path>
+                                <!-- 实际估计的 OLS 经典 t 分布曲线 (Red) -->
+                                <path id="path-t-iid" d="" fill="none" stroke="var(--color-iid)" stroke-width="2.5"></path>
+                                <!-- 实际估计的 Cluster t 分布曲线 (Blue) -->
+                                <path id="path-t-cluster" d="" fill="none" stroke="var(--color-cluster)" stroke-width="2.5"></path>
+                                
+                                <!-- 文字标注 -->
+                                <text x="210" y="195" fill="var(--text-muted)" font-size="8" text-anchor="middle">t = 0 (无效应)</text>
+                                <text x="140" y="195" fill="#ef4444" font-size="8" text-anchor="middle">-1.96</text>
+                                <text x="280" y="195" fill="#ef4444" font-size="8" text-anchor="middle">+1.96</text>
+                            </svg>
                         </div>
-                        <svg class="svg-chart" id="t-dist-svg" viewBox="0 0 400 220">
-                            <!-- 坐标轴 -->
-                            <line x1="50" y1="180" x2="370" y2="180" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"></line>
-                            <line x1="210" y1="20" x2="210" y2="180" stroke="rgba(255,255,255,0.1)" stroke-dasharray="3,3"></line>
-                            <!-- 临界线 ±1.96 -->
-                            <line x1="140" y1="20" x2="140" y2="180" stroke="#ef4444" stroke-dasharray="2,2" opacity="0.6"></line>
-                            <line x1="280" y1="20" x2="280" y2="180" stroke="#ef4444" stroke-dasharray="2,2" opacity="0.6"></line>
-                            <!-- 标准正态曲线背景 (Dotted grey) -->
-                            <path id="path-normal" d="" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-dasharray="3,3"></path>
-                            <!-- 实际估计的 OLS 经典 t 分布曲线 (Red) -->
-                            <path id="path-t-iid" d="" fill="none" stroke="var(--color-iid)" stroke-width="2.5"></path>
-                            <!-- 实际估计的 Cluster t 分布曲线 (Blue) -->
-                            <path id="path-t-cluster" d="" fill="none" stroke="var(--color-cluster)" stroke-width="2.5"></path>
-                            
-                            <!-- 文字标注 -->
-                            <text x="210" y="195" fill="var(--text-muted)" font-size="8" text-anchor="middle">t = 0 (无效应)</text>
-                            <text x="140" y="195" fill="#ef4444" font-size="8" text-anchor="middle">-1.96</text>
-                            <text x="280" y="195" fill="#ef4444" font-size="8" text-anchor="middle">+1.96</text>
-                        </svg>
+
+                        <!-- t统计量折叠图注 (折叠) -->
+                        <details class="premium-details" style="margin-top: 0.5rem; margin-bottom: 0; padding: 0.4rem 0.6rem;">
+                            <summary class="premium-summary" style="font-size: 0.75rem; color: var(--text-secondary);">💡 t 经验分布解读</summary>
+                            <div class="details-content" style="font-size: 0.75rem; line-height: 1.4; padding-top: 0.4rem;">
+                                <p style="margin-bottom: 0.4rem;"><strong>窗口含义</strong>：绘制估计得到的 $t$-统计量经验概率密度（核密度估计 PDF）。白色虚线为标准正态分布，红色虚线为 $\pm 1.96$ 的 5% 显著性检验界线。</p>
+                                <p><strong>直觉诊断</strong>：拖高自相关 $\rho$ 时，红色的 OLS 统计量曲线会急剧<strong>塌陷并长出厚重的胖尾（Fat Tails）</strong>。大量 $t$ 值被甩到红线之外，直观展现了假阳性在统计分布上的根本成因，而聚类标准误（蓝色曲线）则坚守高斯分布形态。</p>
+                            </div>
+                        </details>
                     </div>
 
                     <!-- 置信区间覆盖度体检沙盒 -->
-                    <div class="glass-card full-width">
-                        <div class="card-header">
-                            <span class="card-title">🎯 20个随机宇宙置信区间（CI）覆盖体检（真实效应等于0）</span>
-                            <div class="ci-chart-legend">
-                                <div class="ci-legend-item"><div class="ci-dot success"></div><span>捕获真实 0 (诚实)</span></div>
-                                <div class="ci-legend-item"><div class="ci-dot fail"></div><span>错失真实 0 (假阳性)</span></div>
+                    <div class="glass-card full-width" style="display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div class="card-header">
+                                <span class="card-title">🎯 20个随机宇宙置信区间（CI）覆盖体检（真实效应等于0）</span>
+                                <div class="ci-chart-legend">
+                                    <div class="ci-legend-item"><div class="ci-dot success"></div><span>捕获真实 0 (诚实)</span></div>
+                                    <div class="ci-legend-item"><div class="ci-dot fail"></div><span>错失真实 0 (假阳性)</span></div>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <!-- 置信区间绘制区域 -->
-                        <svg id="ci-svg" style="width: 100%; height: 260px; background: rgba(255,255,255,0.01); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);" viewBox="0 0 800 260">
-                            <!-- 黄金 0 线 -->
-                            <line x1="400" y1="10" x2="400" y2="240" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2"></line>
-                            <text x="400" y="252" fill="var(--text-secondary)" font-size="9" text-anchor="middle">真实效应 &beta; = 0</text>
                             
-                            <!-- 区间绘制区 -->
-                            <g id="ci-elements-group"></g>
-                        </svg>
+                            <!-- 置信区间绘制区域 -->
+                            <svg id="ci-svg" style="width: 100%; height: 260px; background: rgba(255,255,255,0.01); border-radius: 12px; border: 1px solid rgba(255,255,255,0.03);" viewBox="0 0 800 260">
+                                <!-- 黄金 0 线 -->
+                                <line x1="400" y1="10" x2="400" y2="240" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2"></line>
+                                <text x="400" y="252" fill="var(--text-secondary)" font-size="9" text-anchor="middle">真实效应 &beta; = 0</text>
+                                
+                                <!-- 区间绘制区 -->
+                                <g id="ci-elements-group"></g>
+                            </svg>
+                        </div>
+
+                        <!-- 置信区间折叠图注 (折叠) -->
+                        <details class="premium-details" style="margin-top: 1rem; margin-bottom: 0; padding: 0.5rem 0.75rem;">
+                            <summary class="premium-summary" style="font-size: 0.75rem; color: var(--text-secondary);">💡 置信区间体检解读</summary>
+                            <div class="details-content" style="font-size: 0.75rem; line-height: 1.4; padding-top: 0.5rem;">
+                                <p style="margin-bottom: 0.5rem;"><strong>窗口含义</strong>：随机展示 20 个平行宇宙下的 95% 置信区间。横线代表区间长度，中间白色点为区间点估计值 $\hat{\beta}$。</p>
+                                <p><strong>直觉诊断</strong>：在自相关环境下，无视相关性的 OLS 标准误得出的置信区间**窄得不合常理**（自负而虚弱）。由于真实效应为 0，只要区间没有跨过中间的零线（即区间不包含0，误诊为显著），横线就会**瞬间爆红并发光警告**。这直观展示了虚无的精确度如何漏掉真理。</p>
+                            </div>
+                        </details>
                     </div>
 
                 </div>
