@@ -198,6 +198,35 @@
             transform: scale(1.2);
         }
 
+        /* Translucent inputs for bidirectional parameters */
+        .input-val {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            border-radius: 6px;
+            color: var(--color-cluster);
+            font-family: monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            width: 70px;
+            text-align: right;
+            padding: 2px 6px;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+        .input-val:focus {
+            border-color: rgba(59, 130, 246, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 8px rgba(59, 130, 246, 0.2);
+        }
+        .input-val::-webkit-outer-spin-button,
+        .input-val::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .input-val {
+            -moz-appearance: textfield;
+        }
+
         .btn-run {
             width: 100%;
             background: linear-gradient(135deg, var(--color-cluster) 0%, #1e40af 100%);
@@ -572,33 +601,33 @@
             <div class="control-group">
                 <div class="control-label">
                     <span>AR(1) 残差自相关 (ρ)</span>
-                    <span class="val" id="val-rho">0.80</span>
+                    <input type="number" id="val-rho" class="input-val" value="0.80" min="-0.99" max="0.99" step="0.05">
                 </div>
-                <input type="range" id="param-rho" class="slider" min="0" max="0.9" step="0.1" value="0.8">
+                <input type="range" id="param-rho" class="slider" min="-0.9" max="0.9" step="0.1" value="0.8">
             </div>
 
             <div class="control-group">
                 <div class="control-label">
                     <span>平行宇宙模拟次数</span>
-                    <span class="val" id="val-nsim">200</span>
+                    <input type="number" id="val-nsim" class="input-val" value="200" min="1" max="1000" step="10">
                 </div>
-                <input type="range" id="param-nsim" class="slider" min="50" max="300" step="50" value="200">
+                <input type="range" id="param-nsim" class="slider" min="50" max="500" step="50" value="200">
             </div>
 
             <div class="control-group">
                 <div class="control-label">
                     <span>省份组数 (G)</span>
-                    <span class="val" id="val-ngroups">50</span>
+                    <input type="number" id="val-ngroups" class="input-val" value="50" min="2" max="500" step="1">
                 </div>
-                <input type="range" id="param-ngroups" class="slider" min="10" max="100" step="10" value="50">
+                <input type="range" id="param-ngroups" class="slider" min="5" max="100" step="5" value="50">
             </div>
 
             <div class="control-group">
                 <div class="control-label">
                     <span>每组观测数量 (N)</span>
-                    <span class="val" id="val-nunits">10</span>
+                    <input type="number" id="val-nunits" class="input-val" value="10" min="1" max="200" step="1">
                 </div>
-                <input type="range" id="param-nunits" class="slider" min="5" max="30" step="5" value="10">
+                <input type="range" id="param-nunits" class="slider" min="2" max="30" step="1" value="10">
             </div>
 
             <button class="btn-run" onclick="triggerSimulation()">
@@ -873,16 +902,49 @@
             document.querySelectorAll('.nav-tab')[btnIndex].classList.add('active');
         }
 
-        // 滑块值同步
+        // 滑块与输入框的双向绑定与同步
         const sliderRho = document.getElementById('param-rho');
+        const inputRho = document.getElementById('val-rho');
         const sliderNsim = document.getElementById('param-nsim');
+        const inputNsim = document.getElementById('val-nsim');
         const sliderNgroups = document.getElementById('param-ngroups');
+        const inputNgroups = document.getElementById('val-ngroups');
         const sliderNunits = document.getElementById('param-nunits');
+        const inputNunits = document.getElementById('val-nunits');
 
-        sliderRho.addEventListener('input', () => document.getElementById('val-rho').innerText = parseFloat(sliderRho.value).toFixed(2));
-        sliderNsim.addEventListener('input', () => document.getElementById('val-nsim').innerText = sliderNsim.value);
-        sliderNgroups.addEventListener('input', () => document.getElementById('val-ngroups').innerText = sliderNgroups.value);
-        sliderNunits.addEventListener('input', () => document.getElementById('val-nunits').innerText = sliderNunits.value);
+        // 双向同步函数
+        function syncBidirectional(slider, input, minVal, maxVal, isFloat = false) {
+            // 滑动滑块更新输入框
+            slider.addEventListener('input', () => {
+                input.value = isFloat ? parseFloat(slider.value).toFixed(2) : slider.value;
+            });
+            
+            // 输入数值更新滑块 (允许极端输入)
+            input.addEventListener('input', () => {
+                let val = parseFloat(input.value);
+                if (isNaN(val)) return;
+                
+                // 限制边界范围
+                if (val < minVal) val = minVal;
+                if (val > maxVal) val = maxVal;
+                
+                // 同步更新滑块 (滑块具有自己的硬min/max限制，若输入超出则滑块停留在最边缘)
+                slider.value = val;
+            });
+            
+            // 失去焦点时补全格式或校准
+            input.addEventListener('blur', () => {
+                let val = parseFloat(input.value);
+                if (isNaN(val) || val < minVal) val = minVal;
+                if (val > maxVal) val = maxVal;
+                input.value = isFloat ? val.toFixed(2) : Math.round(val);
+            });
+        }
+
+        syncBidirectional(sliderRho, inputRho, -0.99, 0.99, true);
+        syncBidirectional(sliderNsim, inputNsim, 1, 1000, false);
+        syncBidirectional(sliderNgroups, inputNgroups, 2, 500, false);
+        syncBidirectional(sliderNunits, inputNunits, 1, 200, false);
 
         // 核心仿真变量缓存，用于可视化曲线和置信区间绘制
         let simResultsCache = null;
@@ -901,10 +963,11 @@
             progressContainer.style.display = 'block';
             progressBar.style.width = '0%';
             
-            const rho = parseFloat(sliderRho.value);
-            const nSims = parseInt(sliderNsim.value);
-            const nGroups = parseInt(sliderNgroups.value);
-            const nUnits = parseInt(sliderNunits.value);
+            // 优先读取极端口径的数字输入框值以支持极端仿真
+            const rho = parseFloat(inputRho.value);
+            const nSims = parseInt(inputNsim.value);
+            const nGroups = parseInt(inputNgroups.value);
+            const nUnits = parseInt(inputNunits.value);
             const nPeriods = 10;
             const nTotal = nGroups * nUnits;
             
