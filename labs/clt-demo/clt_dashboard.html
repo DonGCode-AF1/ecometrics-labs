@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Limit Theorem Simulator</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-purple: #a855f7;
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 2.8rem; margin: 0; background: linear-gradient(to right, var(--accent-purple), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .dashboard { display: grid; grid-template-columns: 320px 1fr; gap: 20px; }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 25px;
+        }
+
+        .control-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 10px; font-weight: 500; color: var(--text-secondary); }
+        
+        select, input[type="range"] {
+            width: 100%;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            accent-color: var(--accent-purple);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent-purple);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3); }
+
+        .stat-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .chart-section { display: flex; flex-direction: column; gap: 20px; }
+        .chart-box { position: relative; }
+        .chart-title { font-size: 1rem; margin-bottom: 10px; color: var(--text-secondary); }
+
+        svg { width: 100%; height: 260px; border-radius: 12px; }
+
+        .badge {
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--accent-purple);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Central Limit Theorem Simulator</h1>
+        <p>见证任何分布如何通过“均值”的力量回归正态</p>
+    </header>
+
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="card">
+            <div class="control-group">
+                <label>选择源分布 (Source Distribution)</label>
+                <select id="select-dist">
+                    <option value="uniform">均匀分布 (Uniform)</option>
+                    <option value="exponential">指数分布 (Exponential - 极度偏态)</option>
+                    <option value="bimodal">双峰分布 (Bimodal)</option>
+                    <option value="bernoulli">伯努利分布 (Discrete 0/1)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>样本量 (Sample Size, n) <span style="float:right" id="val-n">2</span></label>
+                <input type="range" id="input-n" min="1" max="50" step="1" value="2">
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 5px;">
+                    每个均值是由多少个随机数相加求平均得到的。
+                </p>
+            </div>
+
+            <div class="control-group">
+                <label>模拟次数 (Simulations, S) <span style="float:right" id="val-s">2000</span></label>
+                <input type="range" id="input-s" min="500" max="5000" step="500" value="2000">
+            </div>
+
+            <button id="btn-run">运行模拟 (Generate Means)</button>
+            <button id="btn-reset" style="background:transparent; border: 1px solid var(--text-secondary); margin-top: 10px;">重置</button>
+
+            <div class="stat-display">
+                <span>均值 (Mean):</span>
+                <span id="res-mean">-</span>
+            </div>
+            <div class="stat-display">
+                <span>标准差 (SD):</span>
+                <span id="res-sd">-</span>
+            </div>
+        </aside>
+
+        <!-- Charts -->
+        <main class="chart-section">
+            <div class="card chart-box">
+                <div class="chart-title"><span class="badge">Step 1</span> 源分布：原始数据的样子 (Population)</div>
+                <div id="parent-chart"></div>
+            </div>
+
+            <div class="card chart-box">
+                <div class="chart-title"><span class="badge">Step 2</span> 抽样分布：n 个样本均值的分布 (Sampling Distribution)</div>
+                <div id="sampling-chart"></div>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">
+                    注意：随着 n 增加，无论上方是什么分布，下方都会迅速变成钟形曲线（正态分布）。
+                </p>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    const margin = {top: 10, right: 20, bottom: 30, left: 40};
+    const width = 700 - margin.left - margin.right;
+    const height = 260 - margin.top - margin.bottom;
+
+    // Svg Containers
+    const parentSvg = d3.select("#parent-chart").append("svg")
+        .attr("viewBox", `0 0 700 260`)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const samplingSvg = d3.select("#sampling-chart").append("svg")
+        .attr("viewBox", `0 0 700 260`)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Generators
+    const dists = {
+        uniform: () => Math.random(),
+        exponential: () => -Math.log(Math.random()) * 0.5,
+        bimodal: () => Math.random() > 0.5 ? (randn() * 0.1 + 0.2) : (randn() * 0.1 + 0.8),
+        bernoulli: () => Math.random() > 0.7 ? 1 : 0
+    };
+
+    function randn() {
+        let u = 0, v = 0;
+        while(u === 0) u = Math.random();
+        while(v === 0) v = Math.random();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    function runSimulation() {
+        const distType = document.getElementById("select-dist").value;
+        const n = +document.getElementById("input-n").value;
+        const s = +document.getElementById("input-s").value;
+
+        const generator = dists[distType];
+        
+        // 1. Generate Parent Sample for reference
+        const parentSample = Array.from({length: 2000}, generator);
+        drawHistogram(parentSvg, parentSample, [0, d3.max(parentSample)], "var(--accent-blue)");
+
+        // 2. Generate Means
+        const means = [];
+        for (let i = 0; i < s; i++) {
+            let sum = 0;
+            for (let j = 0; j < n; j++) sum += generator();
+            means.push(sum / n);
+        }
+
+        drawHistogram(samplingSvg, means, d3.extent(means), "var(--accent-purple)", true);
+        
+        // Stats
+        document.getElementById("res-mean").innerText = d3.mean(means).toFixed(3);
+        document.getElementById("res-sd").innerText = d3.deviation(means).toFixed(3);
+    }
+
+    function drawHistogram(svg, data, domain, color, overlayNormal = false) {
+        svg.selectAll("*").remove();
+
+        const x = d3.scaleLinear().domain(domain).range([0, width]);
+        const bins = d3.bin().domain(x.domain()).thresholds(40)(data);
+        const y = d3.scaleLinear().domain([0, d3.max(bins, d => d.length)]).range([height, 0]);
+
+        svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+        
+        svg.selectAll("rect")
+            .data(bins)
+            .enter().append("rect")
+            .attr("x", 1)
+            .attr("transform", d => `translate(${x(d.x0)},${y(d.length)})`)
+            .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
+            .attr("height", d => height - y(d.length))
+            .attr("fill", color)
+            .attr("opacity", 0.7);
+
+        if (overlayNormal && data.length > 10) {
+            // Draw a quick normal approximation line
+            const m = d3.mean(data);
+            const sd = d3.deviation(data);
+            const lineData = d3.range(domain[0], domain[1], (domain[1]-domain[0])/100).map(vx => {
+                const p = (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((vx - m) / sd, 2));
+                // scale p to match histogram height
+                const factor = data.length * (bins[0].x1 - bins[0].x0);
+                return {x: vx, y: p * factor};
+            });
+
+            const line = d3.line()
+                .x(d => x(d.x))
+                .y(d => y(d.y));
+
+            svg.append("path")
+                .datum(lineData)
+                .attr("fill", "none")
+                .attr("stroke", "white")
+                .attr("stroke-width", 2)
+                .attr("stroke-dasharray", "4,4")
+                .attr("d", line);
+        }
+    }
+
+    // Listeners
+    document.getElementById("input-n").oninput = e => document.getElementById("val-n").innerText = e.target.value;
+    document.getElementById("input-s").oninput = e => document.getElementById("val-s").innerText = e.target.value;
+    document.getElementById("btn-run").onclick = runSimulation;
+    document.getElementById("btn-reset").onclick = () => { location.reload(); };
+
+    // Initial
+    runSimulation();
+</script>
+
+</body>
+</html>

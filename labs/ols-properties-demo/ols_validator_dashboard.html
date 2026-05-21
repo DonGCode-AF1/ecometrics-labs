@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OLS Properties Validator - Monte Carlo</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-color: #020617;
+            --card-bg: rgba(15, 23, 42, 0.8);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-emerald: #10b981;
+            --accent-cyan: #06b6d4;
+            --accent-amber: #f59e0b;
+            --border-color: rgba(255, 255, 255, 0.08);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 2.5rem; background: linear-gradient(to right, var(--accent-emerald), var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .main-grid { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(8px);
+        }
+
+        .control-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--text-secondary); font-size: 0.9rem; }
+        
+        input[type="range"] { width: 100%; accent-color: var(--accent-emerald); }
+        .val-tag { float: right; color: var(--accent-emerald); font-family: monospace; }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-emerald);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 10px;
+        }
+        button:hover { filter: brightness(1.1); transform: translateY(-1px); }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .metric-item { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 12px; text-align: center; }
+        .metric-label { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px; }
+        .metric-val { font-size: 1.1rem; font-weight: bold; color: var(--accent-cyan); }
+
+        .viz-column { display: flex; flex-direction: column; gap: 20px; }
+        
+        .chart-box { position: relative; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .chart-title { font-size: 1rem; color: var(--text-secondary); font-weight: 500; }
+        
+        svg { width: 100%; height: 280px; border-radius: 12px; background: rgba(0,0,0,0.2); }
+
+        .theory-section { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .theory-card { padding: 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px solid var(--border-color); }
+        .theory-card h3 { color: var(--accent-amber); margin-top: 0; font-size: 1.1rem; }
+        
+        .math-block { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 8px; margin: 10px 0; overflow-x: auto; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>OLS Estimator Properties Validator</h1>
+        <p>通过蒙特卡洛模拟验证 OLS 的无偏性 (Unbiasedness) 与 一致性 (Consistency)</p>
+    </header>
+
+    <div class="main-grid">
+        <!-- Controls -->
+        <aside class="card">
+            <div class="control-group">
+                <label>样本量 (Sample Size, N) <span class="val-tag" id="val-n">30</span></label>
+                <input type="range" id="input-n" min="2" max="2000" step="1" value="30">
+            </div>
+            <div class="control-group">
+                <label>误差项标准差 (Error SD, σ) <span class="val-tag" id="val-sigma">2.0</span></label>
+                <input type="range" id="input-sigma" min="0.1" max="10.0" step="0.1" value="2.0">
+            </div>
+            <div class="control-group">
+                <label>模拟次数 (Simulations, S) <span class="val-tag" id="val-s">500</span></label>
+                <input type="range" id="input-s" min="100" max="2000" step="100" value="500">
+            </div>
+
+            <button id="btn-run">运行验证 (Run Validation)</button>
+            
+            <div class="metrics-grid">
+                <div class="metric-item">
+                    <div class="metric-label">真值 β₁</div>
+                    <div class="metric-val">2.00</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">估计均值 E[β₁]</div>
+                    <div class="metric-val" id="res-mean">-</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">平均偏差 (Bias)</div>
+                    <div class="metric-val" id="res-bias">-</div>
+                </div>
+                <div class="metric-item">
+                    <div class="metric-label">方差 Var(β₁)</div>
+                    <div class="metric-val" id="res-var">-</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; font-size: 0.85rem; color: var(--text-secondary);">
+                <p>💡 <b>实验提示：</b></p>
+                <ul style="padding-left: 15px;">
+                    <li>保持 S 不变，增加 N，观察方差如何缩小（一致性）。</li>
+                    <li>观察无论参数如何变，均值是否始终接近 2.0（无偏性）。</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Visualizations -->
+        <main class="viz-column">
+            <div class="card chart-box">
+                <div class="chart-header">
+                    <div class="chart-title">样本回归线包络 (Spaghetti Plot)</div>
+                    <div style="font-size: 0.7rem; color: var(--accent-amber);">展示前 100 次模拟的拟合线</div>
+                </div>
+                <div id="regression-plot"></div>
+            </div>
+
+            <div class="card chart-box">
+                <div class="chart-header">
+                    <div class="chart-title">估计值 β₁ 的抽样分布 (Sampling Distribution)</div>
+                </div>
+                <div id="sampling-plot"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Theoretical Analysis -->
+    <div class="theory-section">
+        <div class="theory-card">
+            <h3>理论 1：无偏性 (Unbiasedness)</h3>
+            <div class="math-block">
+                \[ E[\hat{\beta}_1 | X] = \beta_1 \]
+            </div>
+            <p><b>直观解释：</b></p>
+            <p>如果我们在成千上万个平行宇宙中重复实验，虽然每个宇宙的结果都有偏差，但所有结果的“平均值”将精准命中真实值。这意味着 OLS 估计量在方向上没有系统性错误。</p>
+        </div>
+
+        <div class="theory-card">
+            <h3>理论 2：一致性 (Consistency)</h3>
+            <div class="math-block">
+                \[ \text{plim}_{n \to \infty} \hat{\beta}_1 = \beta_1 \]
+            </div>
+            <p><b>直观解释：</b></p>
+            <p>随着样本量 $N$ 的增加，估计值的不确定性（方差）会逐渐消失。在图表中，你会发现随着 $N$ 增大，直方图会变得越来越“尖锐”，最终坍缩成真实值所在的一条直线。</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const margin = {top: 20, right: 30, bottom: 40, left: 50};
+    const width = 800 - margin.left - margin.right;
+    const height = 280 - margin.top - margin.bottom;
+
+    const trueBeta0 = 1.0;
+    const trueBeta1 = 2.0;
+
+    const regSvg = d3.select("#regression-plot").append("svg")
+        .attr("viewBox", `0 0 800 280`)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const sampSvg = d3.select("#sampling-plot").append("svg")
+        .attr("viewBox", `0 0 800 280`)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    function randn() {
+        let u = 0, v = 0;
+        while(u === 0) u = Math.random();
+        while(v === 0) v = Math.random();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    function runSimulation() {
+        const n = +document.getElementById("input-n").value;
+        const sigma = +document.getElementById("input-sigma").value;
+        const s = +document.getElementById("input-s").value;
+
+        const allBeta1 = [];
+        const linesToDraw = [];
+
+        for (let i = 0; i < s; i++) {
+            const X = [], Y = [];
+            for (let j = 0; j < n; j++) {
+                const x = Math.random() * 10;
+                const eps = randn() * sigma;
+                const y = trueBeta0 + trueBeta1 * x + eps;
+                X.push(x); Y.push(y);
+            }
+
+            // OLS Solve
+            const mX = d3.mean(X), mY = d3.mean(Y);
+            const b1 = d3.sum(X.map((x, j) => (x - mX) * (Y[j] - mY))) / d3.sum(X.map(x => (x - mX)**2));
+            const b0 = mY - b1 * mX;
+            
+            allBeta1.push(b1);
+            if (i < 100) linesToDraw.push({b0, b1});
+        }
+
+        drawRegression(linesToDraw);
+        drawSampling(allBeta1);
+        
+        // Update Metrics
+        const meanB1 = d3.mean(allBeta1);
+        const varB1 = d3.variance(allBeta1);
+        document.getElementById("res-mean").innerText = meanB1.toFixed(3);
+        document.getElementById("res-bias").innerText = (meanB1 - trueBeta1).toFixed(4);
+        document.getElementById("res-var").innerText = varB1.toFixed(5);
+    }
+
+    function drawRegression(lines) {
+        regSvg.selectAll("*").remove();
+        const x = d3.scaleLinear().domain([0, 10]).range([0, width]);
+        const y = d3.scaleLinear().domain([0, 25]).range([height, 0]);
+
+        regSvg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+        regSvg.append("g").call(d3.axisLeft(y));
+
+        // True Line
+        regSvg.append("line")
+            .attr("x1", x(0)).attr("y1", y(trueBeta0 + trueBeta1 * 0))
+            .attr("x2", x(10)).attr("y2", y(trueBeta0 + trueBeta1 * 10))
+            .attr("stroke", "var(--accent-amber)")
+            .attr("stroke-width", 3).style("z-index", 10);
+
+        // Simulation Lines
+        regSvg.selectAll(".sim-line")
+            .data(lines)
+            .enter().append("line")
+            .attr("class", "sim-line")
+            .attr("x1", x(0)).attr("y1", d => y(d.b0 + d.b1 * 0))
+            .attr("x2", x(10)).attr("y2", d => y(d.b0 + d.b1 * 10))
+            .attr("stroke", "var(--accent-cyan)")
+            .attr("stroke-width", 0.5)
+            .attr("opacity", 0.3);
+    }
+
+    function drawSampling(data) {
+        sampSvg.selectAll("*").remove();
+        
+        // Dynamic domain to better show wide distributions
+        const extent = d3.extent(data);
+        const padding = (extent[1] - extent[0]) * 0.1 || 0.5;
+        const x = d3.scaleLinear()
+            .domain([Math.min(trueBeta1 - 0.5, extent[0] - padding), Math.max(trueBeta1 + 0.5, extent[1] + padding)])
+            .range([0, width]);
+            
+        const bins = d3.bin().domain(x.domain()).thresholds(50)(data);
+        const y = d3.scaleLinear().domain([0, d3.max(bins, d => d.length)]).range([height, 0]);
+
+        sampSvg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+        
+        sampSvg.selectAll("rect")
+            .data(bins)
+            .enter().append("rect")
+            .attr("x", 1)
+            .attr("transform", d => `translate(${x(d.x0)},${y(d.length)})`)
+            .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
+            .attr("height", d => height - y(d.length))
+            .attr("fill", "var(--accent-emerald)")
+            .attr("opacity", 0.7);
+
+        // True Value Marker
+        sampSvg.append("line")
+            .attr("x1", x(trueBeta1)).attr("x2", x(trueBeta1))
+            .attr("y1", 0).attr("y2", height)
+            .attr("stroke", "white").attr("stroke-dasharray", "4");
+    }
+
+    // UI
+    document.getElementById("input-n").oninput = e => document.getElementById("val-n").innerText = e.target.value;
+    document.getElementById("input-sigma").oninput = e => document.getElementById("val-sigma").innerText = e.target.value;
+    document.getElementById("input-s").oninput = e => document.getElementById("val-s").innerText = e.target.value;
+    document.getElementById("btn-run").onclick = runSimulation;
+
+    runSimulation();
+</script>
+
+</body>
+</html>

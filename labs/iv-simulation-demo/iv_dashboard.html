@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IV Simulation Dashboard - Solving Endogeneity</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-color: #030712;
+            --card-bg: #111827;
+            --text-main: #f3f4f6;
+            --text-dim: #9ca3af;
+            --iv-color: #f472b6;
+            --ols-color: #60a5fa;
+            --accent-green: #34d399;
+            --border: #1f2937;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 30px; }
+        h1 { font-size: 2.2rem; margin: 0; color: #fff; }
+        .subtitle { color: var(--text-dim); margin-top: 5px; }
+
+        .layout { display: grid; grid-template-columns: 340px 1fr; gap: 20px; }
+
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .control-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-dim); }
+        input[type="range"] { width: 100%; accent-color: var(--iv-color); }
+        .val { float: right; color: var(--iv-color); font-family: monospace; }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: var(--iv-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        button:hover { filter: brightness(1.1); }
+
+        .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .metric-card { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 10px; text-align: center; }
+        .m-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; }
+        .m-val { font-size: 1.1rem; font-weight: bold; }
+
+        .chart-container { display: flex; flex-direction: column; gap: 20px; }
+        .chart-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .legend { display: flex; gap: 15px; font-size: 0.8rem; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .dot { width: 10px; height: 10px; border-radius: 2px; }
+
+        svg { width: 100%; height: 350px; background: rgba(0,0,0,0.1); border-radius: 12px; }
+
+        .math-panel { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .theory-box { padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid var(--border); }
+        .theory-box h3 { margin-top: 0; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Instrumental Variables (IV) Simulator</h1>
+        <div class="subtitle">解决内生性问题：对比 OLS 与 工具变量法 (2SLS)</div>
+    </header>
+
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside class="card">
+            <div class="control-group">
+                <label>内生性强度 (Endogeneity, δ) <span class="val" id="val-delta">0.5</span></label>
+                <input type="range" id="input-delta" min="0" max="1" step="0.1" value="0.5">
+                <p style="font-size: 0.75rem; color: var(--text-dim);">X 与误差项的相关程度。δ=0 时 OLS 无偏。</p>
+            </div>
+
+            <div class="control-group">
+                <label>工具变量强度 (Inst. Strength, γ) <span class="val" id="val-gamma">0.6</span></label>
+                <input type="range" id="input-gamma" min="0.1" max="2.0" step="0.1" value="0.6">
+                <p style="font-size: 0.75rem; color: var(--text-dim);">Z 对 X 的解释力。值越小，工具越“弱”。</p>
+            </div>
+
+            <div class="control-group">
+                <label>样本量 (N) <span class="val" id="val-n">200</span></label>
+                <input type="range" id="input-n" min="50" max="1000" step="50" value="200">
+            </div>
+
+            <button id="btn-run">开始模拟 (Run MC)</button>
+
+            <div class="metrics">
+                <div class="metric-card" style="border-top: 3px solid var(--ols-color);">
+                    <div class="m-label">OLS 均值</div>
+                    <div class="m-val" id="ols-mean">-</div>
+                </div>
+                <div class="metric-card" style="border-top: 3px solid var(--iv-color);">
+                    <div class="m-label">IV 均值</div>
+                    <div class="m-val" id="iv-mean">-</div>
+                </div>
+            </div>
+            <p style="font-size: 0.8rem; text-align: center; color: var(--accent-green); margin-top: 15px;">
+                真实系数 β = 1.00
+            </p>
+        </aside>
+
+        <!-- Main Charts -->
+        <main class="chart-container">
+            <div class="card">
+                <div class="chart-header">
+                    <div style="font-weight: 600;">估计值的抽样分布 (Sampling Distribution)</div>
+                    <div class="legend">
+                        <div class="legend-item"><div class="dot" style="background: var(--ols-color);"></div> OLS (有偏)</div>
+                        <div class="legend-item"><div class="dot" style="background: var(--iv-color);"></div> IV (无偏)</div>
+                    </div>
+                </div>
+                <div id="dist-plot"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Theory Section -->
+    <div class="math-panel">
+        <div class="theory-box">
+            <h3>内生性陷阱 (Endogeneity)</h3>
+            <p>当 $Cov(X, u) \neq 0$ 时，OLS 估计量会变得**有偏**且**不一致**。你可以在模拟中看到，随着“内生性强度”增加，蓝色分布会整体向右偏移（远离真值 1.0）。</p>
+            <p>模型：$Y = \beta X + u$</p>
+        </div>
+        <div class="theory-box">
+            <h3>工具变量法 (IV/2SLS)</h3>
+            <p>我们引入变量 $Z$，它通过 $X$ 间接影响 $Y$，但与误差项 $u$ 无关。虽然 IV 估计量的方差（分布宽度）通常比 OLS 大，但它能精准地定位到**真值 1.0**（粉色分布中心）。</p>
+            <p>注意：当“工具变量强度”很小时，IV 的方差会变得极大（弱工具变量问题）。</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const margin = {top: 20, right: 30, bottom: 40, left: 50};
+    const width = 800 - margin.left - margin.right;
+    const height = 350 - margin.top - margin.bottom;
+
+    const trueBeta = 1.0;
+    const S = 1000; // 1000 simulations
+
+    const svg = d3.select("#dist-plot").append("svg")
+        .attr("viewBox", `0 0 800 350`)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    function randn() {
+        let u = 0, v = 0;
+        while(u === 0) u = Math.random();
+        while(v === 0) v = Math.random();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    function runSim() {
+        const delta = +document.getElementById("input-delta").value;
+        const gamma = +document.getElementById("input-gamma").value;
+        const n = +document.getElementById("input-n").value;
+
+        const olsResults = [];
+        const ivResults = [];
+
+        for(let s=0; s<S; s++) {
+            const X = [], Y = [], Z = [], U = [];
+            for(let i=0; i<n; i++) {
+                const u = randn();
+                const z = randn();
+                const e = randn() * 0.5;
+                const x = gamma * z + delta * u + e;
+                const y = trueBeta * x + u;
+                X.push(x); Y.push(y); Z.push(z); U.push(u);
+            }
+
+            // OLS
+            const mX = d3.mean(X), mY = d3.mean(Y);
+            const b_ols = d3.sum(X.map((v, i) => (v - mX) * (Y[i] - mY))) / d3.sum(X.map(v => (v - mX)**2));
+            olsResults.push(b_ols);
+
+            // IV (2SLS)
+            // Stage 1: X = pi*Z + v
+            const mZ = d3.mean(Z);
+            const pi = d3.sum(Z.map((v, i) => (v - mZ) * (X[i] - mX))) / d3.sum(Z.map(v => (v - mZ)**2));
+            const X_hat = Z.map(v => d3.mean(X) + pi * (v - mZ));
+            
+            // Stage 2: Y = beta_iv * X_hat
+            const mXhat = d3.mean(X_hat);
+            const b_iv = d3.sum(X_hat.map((v, i) => (v - mXhat) * (Y[i] - mY))) / d3.sum(X_hat.map(v => (v - mXhat)**2));
+            ivResults.push(b_iv);
+        }
+
+        draw(olsResults, ivResults);
+        document.getElementById("ols-mean").innerText = d3.mean(olsResults).toFixed(3);
+        document.getElementById("iv-mean").innerText = d3.mean(ivResults).toFixed(3);
+    }
+
+    function draw(ols, iv) {
+        svg.selectAll("*").remove();
+
+        const x = d3.scaleLinear().domain([0.5, 2.0]).range([0, width]);
+        
+        const histOLS = d3.bin().domain(x.domain()).thresholds(50)(ols);
+        const histIV = d3.bin().domain(x.domain()).thresholds(50)(iv);
+
+        const y = d3.scaleLinear()
+            .domain([0, d3.max([...histOLS, ...histIV], d => d.length)])
+            .range([height, 0]);
+
+        svg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+
+        // Area generator
+        const area = d3.area()
+            .x(d => x((d.x0 + d.x1) / 2))
+            .y0(height)
+            .y1(d => y(d.length))
+            .curve(d3.curveBasis);
+
+        svg.append("path")
+            .datum(histOLS)
+            .attr("fill", "var(--ols-color)")
+            .attr("opacity", 0.5)
+            .attr("d", area);
+
+        svg.append("path")
+            .datum(histIV)
+            .attr("fill", "var(--iv-color)")
+            .attr("opacity", 0.5)
+            .attr("d", area);
+
+        // True Beta Line
+        svg.append("line")
+            .attr("x1", x(trueBeta)).attr("x2", x(trueBeta))
+            .attr("y1", 0).attr("y2", height)
+            .attr("stroke", "white").attr("stroke-dasharray", "4");
+    }
+
+    // UI
+    document.getElementById("input-delta").oninput = e => document.getElementById("val-delta").innerText = e.target.value;
+    document.getElementById("input-gamma").oninput = e => document.getElementById("val-gamma").innerText = e.target.value;
+    document.getElementById("input-n").oninput = e => document.getElementById("val-n").innerText = e.target.value;
+    document.getElementById("btn-run").onclick = runSim;
+
+    runSim();
+</script>
+
+</body>
+</html>

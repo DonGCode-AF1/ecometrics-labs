@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Tossing Simulation - LLN & CLT</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-gold: #fbbf24;
+            --accent-silver: #e2e8f0;
+            --accent-blue: #38bdf8;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 40px; }
+        h1 { font-size: 2.5rem; background: linear-gradient(to right, var(--accent-gold), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .layout { display: grid; grid-template-columns: 350px 1fr; gap: 20px; }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        /* Coin Animation */
+        .coin-container {
+            height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+            margin-bottom: 20px;
+        }
+
+        #coin {
+            width: 100px;
+            height: 100px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .coin-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            backface-visibility: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+            border: 4px solid rgba(0,0,0,0.1);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.2);
+        }
+
+        .heads { background: radial-gradient(circle, #fbbf24, #d97706); color: #78350f; }
+        .tails { background: radial-gradient(circle, #e2e8f0, #94a3b8); color: #334155; transform: rotateY(180deg); }
+
+        .animate-heads { animation: flipHeads 1s forwards; }
+        .animate-tails { animation: flipTails 1s forwards; }
+
+        @keyframes flipHeads {
+            from { transform: rotateY(0); }
+            to { transform: rotateY(1800deg); } /* 5 full rotations */
+        }
+        @keyframes flipTails {
+            from { transform: rotateY(0); }
+            to { transform: rotateY(1980deg); } /* 5.5 rotations */
+        }
+
+        /* Controls */
+        .controls button {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary { background: var(--accent-blue); color: var(--bg-color); }
+        .btn-secondary { background: transparent; border: 1px solid var(--accent-blue); color: var(--accent-blue); }
+
+        .stat-box {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .stat-val { font-size: 1.5rem; font-weight: bold; color: var(--accent-gold); }
+        .stat-label { font-size: 0.8rem; color: var(--text-secondary); }
+
+        /* Charts */
+        .chart-container { margin-bottom: 20px; }
+        .chart-title { font-size: 1.1rem; color: var(--text-secondary); margin-bottom: 10px; }
+        svg { width: 100%; height: 250px; background: rgba(0,0,0,0.1); border-radius: 10px; }
+
+        .tooltip {
+            position: absolute;
+            background: #1e293b;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+            border: 1px solid var(--border-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Coin Tossing Simulation: LLN & CLT</h1>
+        <p>探索大数定律 (LLN) 与 中心极限定理 (CLT) 的奥秘</p>
+    </header>
+
+    <div class="layout">
+        <!-- Sidebar -->
+        <aside>
+            <div class="card">
+                <div class="coin-container">
+                    <div id="coin">
+                        <div class="coin-face heads">正 (H)</div>
+                        <div class="coin-face tails">反 (T)</div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn-primary" id="btn-flip-1">掷 1 次 (Flip Once)</button>
+                    <button class="btn-secondary" id="btn-flip-10">掷 10 次</button>
+                    <button class="btn-secondary" id="btn-flip-100">掷 100 次</button>
+                    <button class="btn-secondary" id="btn-flip-1000" style="background: var(--accent-gold); border-color: var(--accent-gold); color: #000;">加速掷 1000 次</button>
+                    <button class="btn-secondary" id="btn-reset" style="margin-top: 10px; opacity: 0.7;">重置所有数据 (Reset)</button>
+                </div>
+
+                <div class="stat-box">
+                    <div>
+                        <div class="stat-val" id="count-h">0</div>
+                        <div class="stat-label">正面次数</div>
+                    </div>
+                    <div>
+                        <div class="stat-val" id="prop-h">0%</div>
+                        <div class="stat-label">正面比例</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>大数定律 (LLN)</h3>
+                <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                    随着试验次数增加，正面出现的比例会逐渐收敛于理论概率 (0.5)。
+                </p>
+            </div>
+        </aside>
+
+        <!-- Main Charts -->
+        <main>
+            <div class="card chart-container">
+                <div class="chart-title">累计正面比例变化 (LLN Convergence)</div>
+                <div id="lln-chart"></div>
+            </div>
+
+            <div class="card chart-container">
+                <div class="chart-title">多次试验中正面次数的分布 (CLT Distribution)</div>
+                <div id="clt-chart"></div>
+                <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px;">
+                    * 每次统计“掷 100 次”的结果。当模拟次数足够多时，分布呈现正态分布。
+                </p>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+    // Configuration
+    const margin = {top: 20, right: 30, bottom: 40, left: 50};
+    const width = 800 - margin.left - margin.right;
+    const height = 250 - margin.top - margin.bottom;
+
+    // State
+    let totalFlips = 0;
+    let totalHeads = 0;
+    let llnData = []; // [{index: n, prop: p}]
+    let cltData = []; // Array of head counts per session
+
+    // Charts
+    const llnSvg = d3.select("#lln-chart").append("svg")
+        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const cltSvg = d3.select("#clt-chart").append("svg")
+        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    function flipCoin(n = 1, animate = true) {
+        let headsInSession = 0;
+        
+        for (let i = 0; i < n; i++) {
+            const isHeads = Math.random() < 0.5;
+            totalFlips++;
+            if (isHeads) {
+                totalHeads++;
+                headsInSession++;
+            }
+            
+            // Only store a subset of data for LLN to keep it performant
+            if (totalFlips < 100 || totalFlips % Math.ceil(totalFlips / 100) === 0) {
+                llnData.push({index: totalFlips, prop: totalHeads / totalFlips});
+            }
+
+            // For CLT: if we toss exactly 100 times in a session, record it
+            // Or we simulate sessions of 100
+        }
+
+        // Add to CLT data (simulate sessions of 100 internally)
+        if (n >= 100) {
+            // Bulk simulation for CLT
+            for(let j=0; j < Math.max(1, n/100); j++) {
+                let h = 0;
+                for(let k=0; k<100; k++) if(Math.random() < 0.5) h++;
+                cltData.push(h);
+            }
+        } else {
+            // Manual check for one session of 100
+            // (Simple version: just generate random sessions of 100 for the histogram)
+            let h = 0;
+            for(let k=0; k<100; k++) if(Math.random() < 0.5) h++;
+            cltData.push(h);
+        }
+
+        updateUI(headsInSession, n === 1 && animate);
+        drawLLN();
+        drawCLT();
+    }
+
+    function updateUI(heads, animate) {
+        document.getElementById("count-h").innerText = totalHeads;
+        document.getElementById("prop-h").innerText = ((totalHeads/totalFlips)*100).toFixed(1) + "%";
+
+        if (animate) {
+            const coin = document.getElementById("coin");
+            coin.style.animation = 'none';
+            coin.offsetHeight; // trigger reflow
+            const isHeads = (heads === 1);
+            coin.style.animation = isHeads ? 'flipHeads 1s forwards' : 'flipTails 1s forwards';
+        }
+    }
+
+    function drawLLN() {
+        llnSvg.selectAll("*").remove();
+        
+        const x = d3.scaleLog().domain([1, Math.max(10, totalFlips)]).range([0, width]);
+        const y = d3.scaleLinear().domain([0, 1]).range([height, 0]);
+
+        llnSvg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).ticks(5, ".0s"));
+        llnSvg.append("g").call(d3.axisLeft(y));
+
+        // 0.5 Target Line
+        llnSvg.append("line")
+            .attr("x1", 0).attr("x2", width)
+            .attr("y1", y(0.5)).attr("y2", y(0.5))
+            .attr("stroke", "var(--accent-silver)")
+            .attr("stroke-dasharray", "4");
+
+        const line = d3.line()
+            .x(d => x(d.index))
+            .y(d => y(d.prop));
+
+        llnSvg.append("path")
+            .datum(llnData)
+            .attr("fill", "none")
+            .attr("stroke", "var(--accent-gold)")
+            .attr("stroke-width", 2)
+            .attr("d", line);
+    }
+
+    function drawCLT() {
+        cltSvg.selectAll("*").remove();
+        if (cltData.length < 5) return;
+
+        const x = d3.scaleLinear().domain([30, 70]).range([0, width]);
+        const bins = d3.bin().domain(x.domain()).thresholds(20)(cltData);
+        const y = d3.scaleLinear().domain([0, d3.max(bins, d => d.length)]).range([height, 0]);
+
+        cltSvg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+        
+        cltSvg.selectAll("rect")
+            .data(bins)
+            .enter().append("rect")
+            .attr("x", 1)
+            .attr("transform", d => `translate(${x(d.x0)},${y(d.length)})`)
+            .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
+            .attr("height", d => height - y(d.length))
+            .attr("fill", "var(--accent-blue)")
+            .attr("opacity", 0.7);
+    }
+
+    // Listeners
+    document.getElementById("btn-flip-1").onclick = () => flipCoin(1, true);
+    document.getElementById("btn-flip-10").onclick = () => flipCoin(10, false);
+    document.getElementById("btn-flip-100").onclick = () => flipCoin(100, false);
+    document.getElementById("btn-flip-1000").onclick = () => {
+        for(let i=0; i<10; i++) flipCoin(100, false); // Total 1000
+    };
+
+    document.getElementById("btn-reset").onclick = () => {
+        totalFlips = 0;
+        totalHeads = 0;
+        llnData = [];
+        cltData = [];
+        updateUI(0, false);
+        drawLLN();
+        drawCLT();
+        const coin = document.getElementById("coin");
+        coin.style.transform = 'rotateY(0deg)';
+    };
+
+    // Initialize
+    drawLLN();
+</script>
+
+</body>
+</html>

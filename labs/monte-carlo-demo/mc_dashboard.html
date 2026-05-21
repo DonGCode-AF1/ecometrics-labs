@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monte Carlo Simulation Dashboard - Empirical Economics</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-red: #fb7185;
+            --accent-green: #4ade80;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .control-group {
+            margin-bottom: 24px;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent-blue);
+        }
+
+        .value-display {
+            float: right;
+            color: var(--accent-blue);
+            font-family: monospace;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent-blue);
+            color: var(--bg-color);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 12px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        button.secondary {
+            background: transparent;
+            border: 1px solid var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .viz-container {
+            display: grid;
+            grid-template-rows: auto auto;
+            gap: 20px;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            border-left: 4px solid var(--accent-blue);
+            padding-left: 10px;
+        }
+
+        svg {
+            width: 100%;
+            height: 300px;
+            border-radius: 8px;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            opacity: 0;
+        }
+
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #475569;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px; width: 16px;
+            left: 4px; bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--accent-red); }
+        input:checked + .slider:before { transform: translateX(26px); }
+
+        .explanation {
+            margin-top: 40px;
+            font-size: 0.95rem;
+        }
+
+        .math-block {
+            background: rgba(0,0,0,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+        }
+
+        .stat-label { font-size: 0.8rem; color: var(--text-secondary); }
+        .stat-value { font-size: 1.2rem; font-weight: bold; color: var(--accent-green); }
+
+        @media (max-width: 900px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Monte Carlo Simulation: Omitted Variable Bias</h1>
+        <p>直观观察遗漏变量偏差 (OVB) 对估计结果的影响</p>
+    </header>
+
+    <div class="dashboard-grid">
+        <!-- Controls -->
+        <aside class="card controls">
+            <div class="control-group">
+                <label>样本量 (Sample Size, N) <span class="value-display" id="val-n">100</span></label>
+                <input type="range" id="input-n" min="10" max="1000" step="10" value="100">
+            </div>
+
+            <div class="control-group">
+                <label>模拟次数 (Simulations, S) <span class="value-display" id="val-s">500</span></label>
+                <input type="range" id="input-s" min="100" max="2000" step="100" value="500">
+            </div>
+
+            <div class="control-group">
+                <label>变量相关系数 (Correlation, ρ) <span class="value-display" id="val-rho">0.5</span></label>
+                <input type="range" id="input-rho" min="-0.9" max="0.9" step="0.1" value="0.5">
+            </div>
+
+            <div class="control-group">
+                <div class="switch-container">
+                    <span>遗漏变量 X₂ ? (Omit X₂)</span>
+                    <label class="switch">
+                        <input type="checkbox" id="input-omit" checked>
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--text-secondary);">
+                    开启时模型只回归 X₁，关闭时模型同时包含 X₁ 和 X₂。
+                </p>
+            </div>
+
+            <button id="btn-run">运行模拟 (Run Simulation)</button>
+            <button id="btn-reset" class="secondary">重置 (Reset)</button>
+
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-label">真实值 β₁</div>
+                    <div class="stat-value">1.00</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">平均估计值</div>
+                    <div class="stat-value" id="stat-mean">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">平均偏差</div>
+                    <div class="stat-value" id="stat-bias" style="color: var(--accent-red);">-</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Visualizations -->
+        <main class="viz-container">
+            <div class="card">
+                <div class="chart-title">单次样本数据与回归线 (Single Sample Snapshot)</div>
+                <div id="scatter-plot"></div>
+            </div>
+            <div class="card">
+                <div class="chart-title">估计值 β₁ 的抽样分布 (Sampling Distribution of β₁)</div>
+                <div id="hist-plot"></div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Explanation -->
+    <div class="card explanation">
+        <h3>为什么会产生偏差？</h3>
+        <p>
+            在我们的模拟中，真实的数据生成过程 (DGP) 为：
+            <div class="math-block">
+                \[ Y = \beta_1 X_1 + \beta_2 X_2 + \epsilon \]
+            </div>
+            其中我们设定 \(\beta_1 = 1\), \(\beta_2 = 1\)。变量 \(X_1\) 和 \(X_2\) 之间存在相关性 \(\rho\)。
+        </p>
+        <p>
+            如果我们<b>遗漏</b>了变量 \(X_2\)，仅对 \(X_1\) 进行回归，估计出的系数 \(\hat{\beta}_1\) 将会包含偏差：
+            <div class="math-block">
+                \[ E[\hat{\beta}_1] = \beta_1 + \beta_2 \cdot \frac{Cov(X_1, X_2)}{Var(X_1)} \]
+            </div>
+            当 \(\rho > 0\) 且 \(\beta_2 > 0\) 时，你会在右侧的直方图中观察到分布整体向右偏移。
+        </p>
+    </div>
+</div>
+
+<script>
+    // Configuration
+    const margin = {top: 20, right: 20, bottom: 40, left: 50};
+    const width = 800 - margin.left - margin.right;
+    const height = 300 - margin.top - margin.bottom;
+
+    // State
+    let simsResults = [];
+    const trueBeta1 = 1.0;
+    const trueBeta2 = 1.0;
+
+    // Elements
+    const scatterSvg = d3.select("#scatter-plot").append("svg")
+        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const histSvg = d3.select("#hist-plot").append("svg")
+        .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
+        .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // Helper: Random Normal (Box-Muller)
+    function randn() {
+        let u = 0, v = 0;
+        while(u === 0) u = Math.random();
+        while(v === 0) v = Math.random();
+        return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+
+    // Regression Logic
+    function solveOLS(X1, X2, Y, omit) {
+        const n = Y.length;
+        if (omit) {
+            // Y = b0 + b1*X1
+            let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+            for(let i=0; i<n; i++) {
+                sumX += X1[i]; sumY += Y[i];
+                sumXY += X1[i]*Y[i]; sumXX += X1[i]*X1[i];
+            }
+            const meanX = sumX/n, meanY = sumY/n;
+            const b1 = (sumXY - n*meanX*meanY) / (sumXX - n*meanX*meanX);
+            const b0 = meanY - b1*meanX;
+            return { b0, b1 };
+        } else {
+            // Multiple Regression (Simple Matrix for 2 vars)
+            // This is a bit more complex, but for Monte Carlo we need it
+            // Y = b0 + b1*X1 + b2*X2
+            // Using a simplified version for this demo (centered data)
+            const mY = d3.mean(Y), mX1 = d3.mean(X1), mX2 = d3.mean(X2);
+            const y = Y.map(v => v - mY);
+            const x1 = X1.map(v => v - mX1);
+            const x2 = X2.map(v => v - mX2);
+            
+            const s11 = d3.sum(x1.map(v => v*v));
+            const s22 = d3.sum(x2.map(v => v*v));
+            const s12 = d3.sum(x1.map((v, i) => v*x2[i]));
+            const s1y = d3.sum(x1.map((v, i) => v*y[i]));
+            const s2y = d3.sum(x2.map((v, i) => v*y[i]));
+            
+            const det = s11*s22 - s12*s12;
+            const b1 = (s22*s1y - s12*s2y) / det;
+            const b0 = mY - b1*mX1 - ((s11*s2y - s12*s1y)/det)*mX2;
+            return { b0, b1 };
+        }
+    }
+
+    function generateData(n, rho) {
+        const X1 = [], X2 = [], Y = [];
+        for(let i=0; i<n; i++) {
+            const x1 = randn();
+            const z = randn();
+            const x2 = rho * x1 + Math.sqrt(1 - rho*rho) * z;
+            const eps = randn() * 0.5;
+            const y = trueBeta1 * x1 + trueBeta2 * x2 + eps;
+            X1.push(x1); X2.push(x2); Y.push(y);
+        }
+        return { X1, X2, Y };
+    }
+
+    function updateStats() {
+        if (simsResults.length === 0) return;
+        const mean = d3.mean(simsResults);
+        const bias = mean - trueBeta1;
+        d3.select("#stat-mean").text(mean.toFixed(3));
+        d3.select("#stat-bias").text(bias.toFixed(3))
+            .style("color", Math.abs(bias) > 0.1 ? "var(--accent-red)" : "var(--accent-green)");
+    }
+
+    function runSim() {
+        const n = +document.getElementById("input-n").value;
+        const s = +document.getElementById("input-s").value;
+        const rho = +document.getElementById("input-rho").value;
+        const omit = document.getElementById("input-omit").checked;
+
+        simsResults = [];
+        let lastData = null;
+        let lastModel = null;
+
+        for(let i=0; i<s; i++) {
+            const data = generateData(n, rho);
+            const model = solveOLS(data.X1, data.X2, data.Y, omit);
+            simsResults.push(model.b1);
+            if (i === s-1) { lastData = data; lastModel = model; }
+        }
+
+        drawScatter(lastData, lastModel);
+        drawHist();
+        updateStats();
+    }
+
+    function drawScatter(data, model) {
+        scatterSvg.selectAll("*").remove();
+
+        const x = d3.scaleLinear().domain(d3.extent(data.X1)).range([0, width]);
+        const y = d3.scaleLinear().domain(d3.extent(data.Y)).range([height, 0]);
+
+        scatterSvg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+        scatterSvg.append("g").call(d3.axisLeft(y));
+
+        scatterSvg.selectAll("circle")
+            .data(data.X1)
+            .enter().append("circle")
+            .attr("cx", d => x(d))
+            .attr("cy", (d, i) => y(data.Y[i]))
+            .attr("r", 3)
+            .attr("fill", "var(--accent-blue)")
+            .attr("opacity", 0.4);
+
+        // Regression Line
+        const xRange = d3.extent(data.X1);
+        scatterSvg.append("line")
+            .attr("x1", x(xRange[0]))
+            .attr("y1", y(model.b0 + model.b1 * xRange[0]))
+            .attr("x2", x(xRange[1]))
+            .attr("y2", y(model.b0 + model.b1 * xRange[1]))
+            .attr("stroke", "var(--accent-red)")
+            .attr("stroke-width", 3);
+            
+        scatterSvg.append("text")
+            .attr("x", 10)
+            .attr("y", 20)
+            .attr("fill", "var(--accent-red)")
+            .text(`拟合方程: Y = ${model.b0.toFixed(2)} + ${model.b1.toFixed(2)}X₁`);
+    }
+
+    function drawHist() {
+        histSvg.selectAll("*").remove();
+
+        const x = d3.scaleLinear()
+            .domain([d3.min(simsResults) - 0.2, d3.max(simsResults) + 0.2])
+            .range([0, width]);
+
+        const histogram = d3.bin()
+            .domain(x.domain())
+            .thresholds(x.ticks(40));
+
+        const bins = histogram(simsResults);
+
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(bins, d => d.length)])
+            .range([height, 0]);
+
+        histSvg.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+        histSvg.append("g").call(d3.axisLeft(y));
+
+        histSvg.selectAll("rect")
+            .data(bins)
+            .enter().append("rect")
+            .attr("x", 1)
+            .attr("transform", d => `translate(${x(d.x0)},${y(d.length)})`)
+            .attr("width", d => Math.max(0, x(d.x1) - x(d.x0) - 1))
+            .attr("height", d => height - y(d.length))
+            .attr("fill", "var(--accent-green)")
+            .attr("opacity", 0.7);
+
+        // True Beta Line
+        histSvg.append("line")
+            .attr("x1", x(trueBeta1))
+            .attr("x2", x(trueBeta1))
+            .attr("y1", 0)
+            .attr("y2", height)
+            .attr("stroke", "white")
+            .attr("stroke-dasharray", "4")
+            .attr("stroke-width", 2);
+
+        histSvg.append("text")
+            .attr("x", x(trueBeta1) + 5)
+            .attr("y", 20)
+            .attr("fill", "white")
+            .attr("font-size", "12px")
+            .text("真实值 β₁ = 1.0");
+    }
+
+    // UI Listeners
+    document.getElementById("input-n").addEventListener("input", e => { document.getElementById("val-n").innerText = e.target.value; });
+    document.getElementById("input-s").addEventListener("input", e => { document.getElementById("val-s").innerText = e.target.value; });
+    document.getElementById("input-rho").addEventListener("input", e => { document.getElementById("val-rho").innerText = e.target.value; });
+    
+    document.getElementById("btn-run").addEventListener("click", runSim);
+    document.getElementById("btn-reset").addEventListener("click", () => {
+        location.reload();
+    });
+
+    // Initial Run
+    runSim();
+</script>
+
+</body>
+</html>

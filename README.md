@@ -58,6 +58,11 @@ jupyter notebook
 | 实验室目录 | 涵盖知识点与核心机制 | 核心交互与可视化亮点 |
 | :--- | :--- | :--- |
 | **[Clustering MonteCarlo](labs/Clustering%20MonteCarlo/)** | **组内自相关与聚类稳健标准误 (CRVE)**：复现 Bertrand et al. (2004) 面板自相关导致 OLS 假阳性率飙升至 45% 的学术灾难。 | 🎚️ **自相关系数 $\rho$** (-0.9 ~ 0.9)<br>🎚️ **省份组数 $G$ 与观测数 $N$**<br>📈 **KDE核密度曲线、SVG置信区间动态渲染** |
+| **[clt-demo](labs/clt-demo/)** | **中心极限定理 (CLT)**：展示任意母体分布的均值在样本容量 $N \to \infty$ 时服从正态分布。 | 📈 **母体分布自由设定**<br>🎚️ **样本容量 $N$** |
+| **[coin-toss-demo](labs/coin-toss-demo/)** | **大数定律 (LLN)**：通过数万次掷硬币实验的频率收敛动态，展示概率的收敛视觉。 | 📈 **动态收敛曲线**<br>🎚️ **抛掷次数** |
+| **[ols-properties-demo](labs/ols-properties-demo/)** | **OLS 估计量性质体检**：动态模拟与检验 Gauss-Markov 定理中的无偏性与 BLUE 性质。 | 📈 **抽样分布直方图**<br>🎚️ **样本量与扰动方差** |
+| **[monte-carlo-demo](labs/monte-carlo-demo/)** | **遗漏变量偏差 (OVB)**：展示未控制共变混淆因子时，估计系数产生的系统性偏倚。 | 📈 **偏差动态轨迹**<br>🎚️ **变量间相关系数** |
+| **[iv-simulation-demo](labs/iv-simulation-demo/)** | **工具变量与 2SLS**：动态调节工具变量强度，揭示弱工具变量偏误及排他性约束破缺。 | 📈 **弱工具估算漂移图**<br>🎚️ **工具强度与相关性系数** |
 | **[lab_design_template.ipynb](labs/lab_design_template.ipynb)** | **实验开发模板**：规范了未来新增学术概念（如内生性偏误、多期 DID、工具变量强度等）的实验设计架构。 | 供未来追加 Lab 的通用组件模板 |
 
 ---
