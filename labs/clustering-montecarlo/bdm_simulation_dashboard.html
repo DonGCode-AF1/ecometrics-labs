@@ -758,6 +758,16 @@
                                     <td>释放省份内部所有年份的限制，允许任意自相关与异方差。</td>
                                     <td>✅ <b>极其优秀</b>。样本组数足够时，稳妥收敛于名义 5% 线。</td>
                                 </tr>
+                                <tr>
+                                    <td style="color: var(--color-twoway); font-weight: 600;">双向聚类标准误</td>
+                                    <td>同时释放省份与年份维度限制，允许时空双向任意自相关。</td>
+                                    <td>✅ <b>极其完美</b>。完美抵御组内自相关与全国同期系统性冲击。</td>
+                                </tr>
+                                <tr>
+                                    <td style="color: var(--color-wild); font-weight: 600;">野聚类自助法 (Wild)</td>
+                                    <td>在小样本聚类组极少时，基于残差“抛硬币”人工繁衍平行宇宙。</td>
+                                    <td>✅ <b>小样本救星</b>。小样本常规聚类崩塌时，依然锁死 5% 拒绝率。</td>
+                                </tr>
                             </tbody>
                         </table>
 
@@ -1133,29 +1143,39 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                         <div class="frontier-grid">
                             
                             <!-- 前沿 1: 小样本聚类 -->
-                            <div class="glass-card" style="background: rgba(255,255,255,0.02);">
-                                <div class="frontier-badge">边界突破 1：小样本群组 (<em>G</em> &lt; 30)</div>
-                                <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">为什么失效？</h3>
-                                <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5;">
-                                    聚类标准误的有效性依赖于“渐近大样本理论”（要求组数 <em>G</em> &rarr; &infin;）。当聚类组数太少（如仅有 10 个省份）时，CRVE 对残差方差的估计存在向下的偏差，导致假阳性率再次抬头。
-                                </p>
-                                <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-wild);">前沿对策：Wild Cluster Bootstrap</h3>
-                                <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5;">
-                                    利用当前估计的残差，通过“抛硬币（拉德马赫权重）”人工构造数千个高质量的“仿生平行宇宙”，在小样本甚至只有一个治疗组省份的情况下，依然能实现完美的 5% 拒绝率。
-                                </p>
+                            <div class="glass-card" style="background: rgba(255,255,255,0.02); display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <div class="frontier-badge">边界突破 1：小样本群组 (<em>G</em> &lt; 30)</div>
+                                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">为什么失效？</h3>
+                                    <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5; margin-bottom: 0.75rem;">
+                                        聚类标准误的有效性依赖于“渐近大样本理论”（要求组数 <em>G</em> &rarr; &infin;）。当聚类组数太少（如仅有 6 个省份）时，CRVE 对残差方差的估计存在向下的严重偏差，导致传统单向聚类也发生过度拒绝失效。
+                                    </p>
+                                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-wild);">前沿对策：Wild Cluster Bootstrap</h3>
+                                    <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5; margin-bottom: 0.75rem;">
+                                        利用当前估计的残差，通过“抛硬币（拉德马赫权重）”人工构造数百个高保真平行宇宙。在小样本甚至只有一个治疗组省份的情况下，依然能实现完美的 5% 拒绝率。
+                                    </p>
+                                </div>
+                                <button class="btn-run" style="margin-top: 1rem; font-size: 0.75rem; padding: 0.5rem 1rem; width: auto; background: linear-gradient(135deg, var(--color-wild) 0%, #065f46 100%); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);" onclick="runFrontierExperiment('small-sample')">
+                                    🧪 一键配置极小群组 (G=6) 并运行体检
+                                </button>
                             </div>
 
                             <!-- 前沿 2: 双重聚类 -->
-                            <div class="glass-card" style="background: rgba(255,255,255,0.02);">
-                                <div class="frontier-badge">边界突破 2：多维重叠关联</div>
-                                <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">为什么失效？</h3>
-                                <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5;">
-                                    很多时候残差不仅在省份（个体）内部相关，在年份上（例如特定年份爆发金融危机、疫情等系统冲击）也存在交叉相关。如果只按省份进行聚类，依然会低估年份层面的系统共震。
-                                </p>
-                                <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-twoway);">前沿对策：双重聚类 (Two-way Cluster)</h3>
-                                <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5;">
-                                    由 Cameron, Gelbach, and Miller (2011) 提出，通过同时在省份和年份两个维度对协方差矩阵对角块进行松绑解放：<em>V</em><sub>2way</sub> = <em>V</em><sub>id</sub> + <em>V</em><sub>time</sub> - <em>V</em><sub>id &cap; time</sub>，从时空双维度锁死推断漏洞。
-                                </p>
+                            <div class="glass-card" style="background: rgba(255,255,255,0.02); display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <div class="frontier-badge">边界突破 2：多维重叠关联</div>
+                                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">为什么失效？</h3>
+                                    <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5; margin-bottom: 0.75rem;">
+                                        很多时候残差不仅在省份（个体）内部相关，在年份上（例如特定年份爆发金融危机、疫情等系统冲击）也存在全样本的同频关联。如果仅按省份聚类，依然会漏掉时间层面的系统共震。
+                                    </p>
+                                    <h3 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--color-twoway);">前沿对策：双重聚类 (Two-way Cluster)</h3>
+                                    <p class="academic-p" style="font-size: 0.825rem; line-height: 1.5; margin-bottom: 0.75rem;">
+                                        通过同时在省份和年份两个维度对协方差矩阵对角块进行释放：<em>V</em><sub>2way</sub> = <em>V</em><sub>id</sub> + <em>V</em><sub>time</sub> - <em>V</em><sub>id &cap; time</sub>，从时空双维度锁死推断漏洞，提供绝佳的防守！
+                                    </p>
+                                </div>
+                                <button class="btn-run" style="margin-top: 1rem; font-size: 0.75rem; padding: 0.5rem 1rem; width: auto; background: linear-gradient(135deg, var(--color-twoway) 0%, #6b21a8 100%); box-shadow: 0 4px 12px rgba(168, 85, 247, 0.2);" onclick="runFrontierExperiment('two-way')">
+                                    🧪 一键配置强时序自相关 (ρ=0.85) 并运行体检
+                                </button>
                             </div>
 
                         </div>
@@ -1202,6 +1222,30 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
             let t = 1.0 / (1.0 + p * x);
             let y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
             return sign * y;
+        }
+
+        // 前沿拓展快捷参数预设与自动运行
+        function runFrontierExperiment(type) {
+            if (type === 'small-sample') {
+                // 预设极小样本组数 G = 6 (触发常规聚类崩塌，展示 Wild Bootstrap 的极强威力)
+                sliderNgroups.value = 6;
+                inputNgroups.value = 6;
+                sliderRho.value = 0.6;
+                inputRho.value = "0.60";
+                sliderNsim.value = 150;
+                inputNsim.value = 150;
+            } else if (type === 'two-way') {
+                // 预设强时序自回归相关性 ρ = 0.85
+                sliderRho.value = 0.85;
+                inputRho.value = "0.85";
+                sliderNsim.value = 200;
+                inputNsim.value = 200;
+                sliderNgroups.value = 40;
+                inputNgroups.value = 40;
+            }
+            
+            // 自动运行并切换到沙盒标签页
+            triggerSimulation();
         }
 
         // 标签切换
