@@ -870,8 +870,8 @@
                         <details class="premium-details" style="margin-top: 0.5rem; margin-bottom: 0; padding: 0.4rem 0.6rem;">
                             <summary class="premium-summary" style="font-size: 0.75rem; color: var(--text-secondary);">💡 拒绝率对比解读</summary>
                             <div class="details-content" style="font-size: 0.75rem; line-height: 1.4; padding-top: 0.4rem;">
-                                <p style="margin-bottom: 0.4rem;"><strong>窗口含义</strong>：展示在多轮模拟中，判定零假设 $\beta = 0$ “显著不成立”的宇宙比例。因为真实效应为0，此处即为<strong>实际假阳性率（误诊率）</strong>。</p>
-                                <p><strong>直觉诊断</strong>：名义合理线为 5%（绿线）。当自相关 $\rho = 0.8$ 时，经典 OLS 与稳健标准误因漏估自相关残差，使其拒绝率高达 35%~45%，谎报军情；只有聚类标准误能够把假阳性率压制在 5% 上下，实现诚实推断。</p>
+                                <p style="margin-bottom: 0.4rem;"><strong>窗口含义</strong>：展示在多轮模拟中，判定零假设 &beta; = 0 “显著不成立”的宇宙比例。因为真实效应为0，此处即为<strong>实际假阳性率（误诊率）</strong>。</p>
+                                <p><strong>直觉诊断</strong>：名义合理线为 5%（绿线）。当自相关 &rho; = 0.8 时，经典 OLS 与稳健标准误因漏估自相关残差，使其拒绝率高达 35%~45%，谎报军情；只有聚类标准误能够把假阳性率压制在 5% 上下，实现诚实推断。</p>
                             </div>
                         </details>
                     </div>
@@ -907,8 +907,8 @@
                         <details class="premium-details" style="margin-top: 0.5rem; margin-bottom: 0; padding: 0.4rem 0.6rem;">
                             <summary class="premium-summary" style="font-size: 0.75rem; color: var(--text-secondary);">💡 t 经验分布解读</summary>
                             <div class="details-content" style="font-size: 0.75rem; line-height: 1.4; padding-top: 0.4rem;">
-                                <p style="margin-bottom: 0.4rem;"><strong>窗口含义</strong>：绘制估计得到的 <em>t</em>-统计量经验概率密度（核密度估计 PDF）。白色虚线为标准正态分布，红色虚线为 $\pm 1.96$ 的 5% 显著性检验界线。</p>
-                                <p><strong>直觉诊断</strong>：拖高自相关 $\rho$ 时，红色的 OLS 统计量曲线会急剧<strong>塌陷并长出厚重的胖尾（Fat Tails）</strong>。大量 <em>t</em> 值被甩到红线之外，直观展现了假阳性在统计分布上的根本成因，而聚类标准误（蓝色曲线）则坚守高斯分布形态。</p>
+                                <p style="margin-bottom: 0.4rem;"><strong>窗口含义</strong>：绘制估计得到的 <em>t</em>-统计量经验概率密度（核密度估计 PDF）。白色虚线为标准正态分布，红色虚线为 &plusmn;1.96 的 5% 显著性检验界线。</p>
+                                <p><strong>直觉诊断</strong>：拖高自相关 &rho; 时，红色的 OLS 统计量曲线会急剧<strong>塌陷并长出厚重的胖尾（Fat Tails）</strong>。大量 <em>t</em> 值被甩到红线之外，直观展现了假阳性在统计分布上的根本成因，而聚类标准误（蓝色曲线）则坚守高斯分布形态。</p>
                             </div>
                         </details>
                     </div>
@@ -939,8 +939,8 @@
                         <details class="premium-details" style="margin-top: 1rem; margin-bottom: 0; padding: 0.5rem 0.75rem;">
                             <summary class="premium-summary" style="font-size: 0.75rem; color: var(--text-secondary);">💡 置信区间体检解读</summary>
                             <div class="details-content" style="font-size: 0.75rem; line-height: 1.4; padding-top: 0.5rem;">
-                                <p style="margin-bottom: 0.5rem;"><strong>窗口含义</strong>：随机展示 20 个平行宇宙下的 95% 置信区间。横线代表区间长度，中间白色点为区间点估计值 $\hat{\beta}$。</p>
-                                <p><strong>直觉诊断</strong>：在自相关环境下，无视相关性的 OLS 标准误得出的置信区间**窄得不合常理**（自负而虚弱）。由于真实效应为 0，只要区间没有跨过中间的零线（即区间不包含0，误诊为显著），横线就会**瞬间爆红并发光警告**。这直观展示了虚无的精确度如何漏掉真理。</p>
+                                <p style="margin-bottom: 0.5rem;"><strong>窗口含义</strong>：随机展示 20 个平行宇宙下的 95% 置信区间。横线代表区间长度，中间白色点为区间估计值 &beta;&#770;。</p>
+                                <p><strong>直觉诊断</strong>：在自相关环境下，无视相关性 OLS 标准误得出的置信区间<strong>窄得不合常理</strong>（自负而虚弱）。由于真实效应为 0，只要区间没有跨过中间的零线（即区间不包含0，误诊为显著），横线就会<strong>瞬间爆红并发光警告</strong>。这直观展示了虚无的精确度如何漏掉真理。</p>
                             </div>
                         </details>
                     </div>
