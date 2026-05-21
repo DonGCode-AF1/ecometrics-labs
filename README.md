@@ -1,6 +1,13 @@
-# 🎛️ 实证经济学交互式模拟实验室 (Empirical Econometrics Sandbox)
+# 🎛️ 实证经济学与计量模拟交互式实验室 (Empirical Econometrics Sandbox)
 
-欢迎来到实证经济学与计量模拟的**交互式运行实验室**！本仓库旨在将抽象的经济学、统计学定理，通过**轻量级、交互式 Python 仿真**具象化。
+[![GitHub license](https://img.shields.io/github/license/mashape/apistore.svg?style=flat-square)](LICENSE)
+[![Econometrics](https://img.shields.io/badge/Econometrics-Microeconometrics-blue.svg?style=flat-square)](#)
+[![Python](https://img.shields.io/badge/Python-3.8%2B-green.svg?style=flat-square)](#)
+[![Web-based](https://img.shields.io/badge/Interface-HTML5%20Offline-orange.svg?style=flat-square)](#)
+
+欢迎来到实证经济学与计量模拟的**交互式运行实验室**！本仓库旨在将抽象晦涩的经济学、统计学与因果推断定理，通过**轻量级 Jupyter 仿真**与**零依赖的高保真前端交互式沙盒**具象化。
+
+无论是时间序列自相关对推断的侵害、小样本偏误的崩溃过程，还是双重差分与工具变量的精妙边界，您都可以在这里通过“拖拉滑条、观察分布、对比宇宙”来直观领悟。
 
 ---
 
@@ -8,15 +15,18 @@
 
 ```text
 empirical-playground/
-├── README.md                          # 本项目说明书与使用向导
-├── requirements.txt                    # 仿真依赖库（numpy, pandas, scipy, matplotlib, ipywidgets等）
+├── README.md                          # 本项目说明书与多实验室全局向导
+├── requirements.txt                    # 仿真依赖库（numpy, pandas, scipy, matplotlib 等）
 ├── .gitignore                          # Git 忽略配置
-├── ai-coding-skills.md                 # 🤖 AI 助手接手指南与规范（一键配置、去AI腔、文档更新流）
-├── prompt-thoughts-log/                # 🧠 过程留档与操作追溯区
-│   ├── prompt_thoughts_archive.md      # 历史 Prompt 指令与设计思路归档
-│   └── operation_history.log           # 项目迭代与操作的 Commit 风格追踪日志
-└── labs/                               # 🧪 交互式 Jupyter 仿真实验室
-    ├── L1_BDM_Clustering_Sandbox.ipynb # [已上线] 面板自相关与 BDM 45% 过度拒绝率交互实验室
+├── ai-coding-skills.md                 # 🤖 AI 助手接手开发规范与人机协同指南
+└── labs/                               # 🧪 交互式计量经济学实验室 (Labs)
+    ├── Clustering MonteCarlo/          # 【精选展台】BDM (2004) 聚类自相关蒙特卡洛模拟实验室
+    │   ├── bdm_simulation_dashboard.html # 🚀 离线自旋式 HTML5 极美交互式沙盒 (零依赖)
+    │   ├── L3_Clustering_MonteCarlo.ipynb# Python 蒙特卡洛底座与 Stata 复现脚本
+    │   ├── bdm_academic_review.md      # 学术文献评述与理论内核梳理
+    │   ├── run_dashboard.bat           # Windows 一键启动脚本
+    │   └── run_dashboard.sh            # macOS/Linux 一键启动脚本
+    ├── L1_BDM_Clustering_Sandbox.ipynb # 面板自相关与 BDM 45% 过度拒绝率基础实验室
     └── lab_design_template.ipynb       # 实验室规范开发模板（供未来追加实验室使用）
 ```
 
@@ -24,33 +34,43 @@ empirical-playground/
 
 ## ⚡ 快速开始与一键运行 (Quick Start)
 
-为确保“人机协同、一键克隆与秒级配置”，请按照以下步骤运行实验室：
+### 1. 📊 极速体验离线交互沙盒（免环境配置）
+进入 `labs/Clustering MonteCarlo/` 目录：
+*   **Windows**：直接双击运行 `run_dashboard.bat`。
+*   **macOS / Linux**：双击或在终端运行 `bash run_dashboard.sh`。
+*   这会立即在您的默认浏览器中打开高保真的“蒙特卡洛平行宇宙实验室”，您可以调整自相关系数 $\rho$、聚类组数 $G$，在几毫秒内运算数百个宇宙！
 
-### 1. 环境安装
-打开终端，运行以下命令一键配置全部依赖：
+### 2. 📓 运行 Jupyter 底层仿真
+若要调试或探索底层的 Python 代码实现，请在终端执行：
 ```bash
+# 1. 一键配置环境依赖
 pip install -r requirements.txt
-```
 
-### 2. 启动实验室
-在终端启动 Jupyter Notebook：
-```bash
+# 2. 启动 Jupyter 控制台
 jupyter notebook
 ```
-在浏览器打开并进入 `labs/` 目录，即可点开具体的实验文件进行交互式调参！
+在浏览器中点进 `labs/` 文件夹，选择您感兴趣的实验进行交互式运行。
 
 ---
 
 ## 🧪 实验室明细索引 (Lab Catalog)
 
-| 实验室文件名 | 涵盖知识点与核心机制 | 核心交互点与参数滑块 |
+| 实验室目录 | 涵盖知识点与核心机制 | 核心交互与可视化亮点 |
 | :--- | :--- | :--- |
-| **[L1_BDM_Clustering_Sandbox.ipynb](labs/L1_BDM_Clustering_Sandbox.ipynb)** | **自相关与聚类稳健标准误**：复现 Bertrand et al. (2004) 面板序列自相关导致 OLS 实际假阳性率暴增至 35%-45% 的学术灾难。 | 🎚️ **自相关系数 $\rho$** (0.0 ~ 0.9)<br>🎚️ **模拟次数** (50 ~ 300)<br>🎚️ **省份组数 $G$** (10 ~ 100) |
-| **[lab_design_template.ipynb](labs/lab_design_template.ipynb)** | **实验开发模板**：规范了未来新增学术概念（如内生性偏误、多期 DID 等）的实验设计架构。 | - |
+| **[Clustering MonteCarlo](labs/Clustering%20MonteCarlo/)** | **组内自相关与聚类稳健标准误 (CRVE)**：复现 Bertrand et al. (2004) 面板自相关导致 OLS 假阳性率飙升至 45% 的学术灾难。 | 🎚️ **自相关系数 $\rho$** (-0.9 ~ 0.9)<br>🎚️ **省份组数 $G$ 与观测数 $N$**<br>📈 **KDE核密度曲线、SVG置信区间动态渲染** |
+| **[lab_design_template.ipynb](labs/lab_design_template.ipynb)** | **实验开发模板**：规范了未来新增学术概念（如内生性偏误、多期 DID、工具变量强度等）的实验设计架构。 | 供未来追加 Lab 的通用组件模板 |
+
+---
+
+## 🚀 未来扩展计划 (Roadmap)
+本仓库作为一个通用的**实证经济学交互乐园**，未来将逐步上线以下高水平学术实验室：
+- [ ] **Lab 4: Causal Inference & RI**: 随机化推断（Randomization Inference）与 Fisher 确切概率检验。
+- [ ] **Lab 5: Weak Instruments**: 工具变量（IV）弱工具变量偏误与第一阶段 F 检验临界值。
+- [ ] **Lab 6: Twoway Fixed Effects (TWFE)**: 双重固定效应下的“坏控制变量”与处理效应异质性偏误。
 
 ---
 
 ## 🤝 开发者与 AI 助手协同开发规范 (For Successor AI Assistants)
 后续接手本仓库的 AI 助手，**必须**严格遵循 [ai-coding-skills.md](ai-coding-skills.md) 指南：
-1. 更新代码或添加实验后，**必须**在 `operation_history.log` 和 `prompt_thoughts_archive.md` 中进行归档。
+1. 更新代码或添加实验后，**必须**在 `prompt-thoughts-log/` 中进行日志与思路留档。
 2. 实验解读必须使用精炼、精准的学术语言，**严禁使用任何形式的 AI 常用套话与情绪词汇**。
