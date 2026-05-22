@@ -9,6 +9,10 @@
 
 无论是时间序列自相关对推断的侵害、小样本偏误的崩溃过程，还是双重差分与工具变量的精妙边界，您都可以在这里通过“拖拉滑条、观察分布、对比宇宙”来直观领悟。
 
+> [!TIP]
+> 🚀 **【网页端直开通道（免配置，免 404）】**：我们已经搭建了极富艺术感的暗金拟物中央大厅！点击下方链接，即可直接在浏览器中实时运行所有交互实验室：
+> 👉 **[【点击进入】计量经济学与统计仿真中央实验室 ➔](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/index.html)**
+
 ---
 
 ## 🗺️ 项目物理架构与文件索引 (Project Directory Index)
@@ -57,13 +61,13 @@ jupyter notebook
 
 | 实验室目录 | 涵盖知识点与核心机制 | 核心交互与可视化亮点 |
 | :--- | :--- | :--- |
-| **[clustering-montecarlo](labs/clustering-montecarlo/)**<br>🌐 [网页版直开](https://dongcode-af1.github.io/ecometrics-labs/labs/clustering-montecarlo/bdm_simulation_dashboard.html) | **组内自相关与聚类稳健标准误 (CRVE)**：复现 Bertrand et al. (2004) 面板自相关导致 OLS 假阳性率飙升至 45% 的学术灾难。 | 🎚️ **自相关系数 $\rho$** (-0.9 ~ 0.9)<br>🎚️ **省份组数 $G$ 与观测数 $N$**<br>📈 **KDE核密度曲线、SVG置信区间动态渲染** |
+| **[clustering-montecarlo](labs/clustering-montecarlo/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/clustering-montecarlo/bdm_simulation_dashboard.html) | **组内自相关与聚类稳健标准误 (CRVE)**：复现 Bertrand et al. (2004) 面板自相关导致 OLS 假阳性率飙升至 45% 的学术灾难。 | 🎚️ **自相关系数 $\rho$** (-0.9 ~ 0.9)<br>🎚️ **省份组数 $G$ 与观测数 $N$**<br>📈 **KDE核密度曲线、SVG置信区间动态渲染** |
 | **[Clustering_MonteCarlo_Analysis](labs/Clustering_MonteCarlo_Analysis/)** | **BDM 蒙特卡洛学术级复现与深度剖析**：系统性诊断老师代码中的自由度与大样本偏差修正因子，结合课件深度解析实验原理、双向去均值（Within）算法以及学术级 Bar Chart 可视化。 | 📈 **自相关侵害退化趋势图**<br>📓 **大样本纠偏系数 (G/(G-1) * (M-1)/(M-k)) 手动实现** |
-| **[clt-demo](labs/clt-demo/)**<br>🌐 [网页版直开](https://dongcode-af1.github.io/ecometrics-labs/labs/clt-demo/clt_dashboard.html) | **中心极限定理 (CLT)**：展示任意母体分布的均值在样本容量 $N \to \infty$ 时服从正态分布。 | 📈 **母体分布自由设定**<br>🎚️ **样本容量 $N$** |
-| **[coin-toss-demo](labs/coin-toss-demo/)**<br>🌐 [网页版直开](https://dongcode-af1.github.io/ecometrics-labs/labs/coin-toss-demo/coin_toss_dashboard.html) | **大数定律 (LLN)**：通过数万次掷硬币实验的频率收敛动态，展示概率的收敛视觉。 | 📈 **动态收敛曲线**<br>🎚️ **抛掷次数** |
-| **[ols-properties-demo](labs/ols-properties-demo/)**<br>🌐 [网页版直开](https://dongcode-af1.github.io/ecometrics-labs/labs/ols-properties-demo/ols_validator_dashboard.html) | **OLS 估计量性质体检**：动态模拟与检验 Gauss-Markov 定理中的无偏性与 BLUE 性质。 | 📈 **抽样分布直方图**<br>🎚️ **样本量与扰动方差** |
-| **[monte-carlo-demo](labs/monte-carlo-demo/)**<br>🌐 [网页版直开](https://dongcode-af1.github.io/ecometrics-labs/labs/monte-carlo-demo/mc_dashboard.html) | **遗漏变量偏差 (OVB)**：展示未控制共变混淆因子时，估计系数产生的系统性偏倚。 | 📈 **偏差动态轨迹**<br>🎚️ **变量间相关系数** |
-| **[iv-simulation-demo](labs/iv-simulation-demo/)**<br>🌐 [网页版直开](https://dongcode-af1.github.io/ecometrics-labs/labs/iv-simulation-demo/iv_dashboard.html) | **工具变量与 2SLS**：动态调节工具变量强度，揭示弱工具变量偏误及排他性约束破缺。 | 📈 **弱工具估算漂移图**<br>🎚️ **工具强度与相关性系数** |
+| **[clt-demo](labs/clt-demo/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/clt-demo/clt_dashboard.html) | **中心极限定理 (CLT)**：展示任意母体分布的均值在样本容量 $N \to \infty$ 时服从正态分布。 | 📈 **母体分布自由设定**<br>🎚️ **样本容量 $N$** |
+| **[coin-toss-demo](labs/coin-toss-demo/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/coin-toss-demo/coin_toss_dashboard.html) | **大数定律 (LLN)**：通过数万次掷硬币实验的频率收敛动态，展示概率的收敛视觉。 | 📈 **动态收敛曲线**<br>🎚️ **抛掷次数** |
+| **[ols-properties-demo](labs/ols-properties-demo/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/ols-properties-demo/ols_validator_dashboard.html) | **OLS 估计量性质体检**：动态模拟与检验 Gauss-Markov 定理中的无偏性与 BLUE 性质。 | 📈 **抽样分布直方图**<br>🎚️ **样本量与扰动方差** |
+| **[monte-carlo-demo](labs/monte-carlo-demo/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/monte-carlo-demo/mc_dashboard.html) | **遗漏变量偏差 (OVB)**：展示未控制共变混淆因子时，估计系数产生的系统性偏倚。 | 📈 **偏差动态轨迹**<br>🎚️ **变量间相关系数** |
+| **[iv-simulation-demo](labs/iv-simulation-demo/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/iv-simulation-demo/iv_dashboard.html) | **工具变量与 2SLS**：动态调节工具变量强度，揭示弱工具变量偏误及排他性约束破缺。 | 📈 **弱工具估算漂移图**<br>🎚️ **工具强度与相关性系数** |
 
 | **[lab_design_template.ipynb](labs/lab_design_template.ipynb)** | **实验开发模板**：规范了未来新增学术概念（如内生性偏误、多期 DID、工具变量强度等）的实验设计架构。 | 供未来追加 Lab 的通用组件模板 |
 
