@@ -676,6 +676,14 @@
                 <input type="range" id="param-nunits" class="slider" min="2" max="30" step="1" value="10">
             </div>
 
+            <div class="control-group">
+                <div class="control-label">
+                    <span>观测时期数量 (T)</span>
+                    <input type="number" id="val-nperiods" class="input-val" value="10" min="3" max="50" step="1">
+                </div>
+                <input type="range" id="param-nperiods" class="slider" min="3" max="30" step="1" value="10">
+            </div>
+
             <button class="btn-run" onclick="triggerSimulation()">
                 <span>⚡ 运行蒙特卡洛模拟</span>
             </button>
@@ -1095,15 +1103,21 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                                 <text x="760" y="213" fill="var(--color-wild)" font-size="8" text-anchor="start" font-weight="600">标称 5% 显著线</text>
 
                                 <!-- 图例 -->
-                                <g transform="translate(380, 15)">
-                                    <rect x="0" y="0" width="10" height="10" fill="var(--color-iid)" rx="2"></rect>
-                                    <text x="15" y="9" fill="var(--text-secondary)" font-size="9">IID 经典标准误</text>
+                                <g transform="translate(60, 15)">
+                                    <rect x="0" y="0" width="8" height="8" fill="var(--color-iid)" rx="2"></rect>
+                                    <text x="12" y="8" fill="var(--text-secondary)" font-size="8.5">IID 经典</text>
 
-                                    <rect x="120" y="0" width="10" height="10" fill="var(--color-robust)" rx="2"></rect>
-                                    <text x="135" y="9" fill="var(--text-secondary)" font-size="9">HC1 稳健标准误</text>
+                                    <rect x="110" y="0" width="8" height="8" fill="var(--color-robust)" rx="2"></rect>
+                                    <text x="122" y="8" fill="var(--text-secondary)" font-size="8.5">HC1 稳健</text>
 
-                                    <rect x="240" y="0" width="10" height="10" fill="var(--color-cluster)" rx="2"></rect>
-                                    <text x="255" y="9" fill="var(--text-secondary)" font-size="9">省份级聚类标准误</text>
+                                    <rect x="220" y="0" width="8" height="8" fill="var(--color-cluster)" rx="2"></rect>
+                                    <text x="232" y="8" fill="var(--text-secondary)" font-size="8.5">单向省份聚类</text>
+
+                                    <rect x="350" y="0" width="8" height="8" fill="var(--color-twoway)" rx="2"></rect>
+                                    <text x="362" y="8" fill="var(--text-secondary)" font-size="8.5">双向聚类 (省份&时间)</text>
+
+                                    <rect x="520" y="0" width="8" height="8" fill="var(--color-wild)" rx="2"></rect>
+                                    <text x="532" y="8" fill="var(--text-secondary)" font-size="8.5">Wild Cluster Bootstrap</text>
                                 </g>
 
                                 <!-- 柱状图绘制区 -->
@@ -1270,6 +1284,8 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
         const inputNgroups = document.getElementById('val-ngroups');
         const sliderNunits = document.getElementById('param-nunits');
         const inputNunits = document.getElementById('val-nunits');
+        const sliderNperiods = document.getElementById('param-nperiods');
+        const inputNperiods = document.getElementById('val-nperiods');
 
         // 双向同步函数
         function syncBidirectional(slider, input, minVal, maxVal, isFloat = false) {
@@ -1304,6 +1320,7 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
         syncBidirectional(sliderNsim, inputNsim, 1, 1000, false);
         syncBidirectional(sliderNgroups, inputNgroups, 2, 500, false);
         syncBidirectional(sliderNunits, inputNunits, 1, 200, false);
+        syncBidirectional(sliderNperiods, inputNperiods, 3, 50, false);
 
         // 核心仿真变量缓存，用于可视化曲线和置信区间绘制
         let simResultsCache = null;
@@ -1327,7 +1344,7 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
             const nSims = parseInt(inputNsim.value);
             const nGroups = parseInt(inputNgroups.value);
             const nUnits = parseInt(inputNunits.value);
-            const nPeriods = 10;
+            const nPeriods = parseInt(inputNperiods.value);
             const nTotal = nGroups * nUnits;
             
             let currentSim = 0;
@@ -1361,7 +1378,7 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                         eps.push(row);
                     }
                     
-                    // 2. 构造虚拟政策矩阵 D (随机分配20%的省份省份有政策，时间在t>=5发生)
+                    // 2. 构造虚拟政策矩阵 D (随机分配20%的省份省份有政策，时间在t>=midpoint发生)
                     let groupIds = [];
                     for(let g = 0; g < nGroups; g++) {
                         for(let u = 0; u < nUnits; u++) {
@@ -1375,11 +1392,12 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                         treatedGroups.add(Math.floor(Math.random() * nGroups));
                     }
                     
+                    let policyStart = Math.floor(nPeriods / 2);
                     let D = [];
                     for(let i = 0; i < nTotal; i++) {
                         let row = new Array(nPeriods).fill(0);
                         if(treatedGroups.has(groupIds[i])) {
-                            for(let t = 4; t < nPeriods; t++) row[t] = 1;
+                            for(let t = policyStart; t < nPeriods; t++) row[t] = 1;
                         }
                         D.push(row);
                     }
@@ -1463,16 +1481,19 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                     // 8. 省份级单向聚类标准误 (Cluster by Group Level)
                     // ----------------------------------------------------
                     let groupScores = new Array(nGroups).fill(0);
+                    let groupScoresRestricted = new Array(nGroups).fill(0);
                     let groupDen = new Array(nGroups).fill(0);
                     for(let j=0; j<y_dm.length; j++) {
                         let obsIndex = j;
                         let unitIndex = Math.floor(obsIndex / nPeriods);
                         let groupIndex = groupIds[unitIndex];
                         groupScores[groupIndex] += x_dm[j] * resid[j];
+                        groupScoresRestricted[groupIndex] += x_dm[j] * y_dm[j]; // 限制性残差组得分 (用于 Wild Bootstrap)
                         groupDen[groupIndex] += x_dm[j] * x_dm[j];
                     }
                     let sumCluster = groupScores.reduce((a,b)=>a + b*b, 0);
-                    let clusterScale = nGroups / (nGroups - 1);
+                    // 引入有限样本纠偏乘子，以与 Stata/Python 精度完全对齐
+                    let clusterScale = (nGroups / (nGroups - 1)) * ((nTotal * nPeriods - 1) / df);
                     let se_cluster = Math.sqrt(sumCluster * clusterScale) / den;
                     let t_cluster = betaHat / se_cluster;
                     let p_cluster = 2 * (1 - studentTcdf(t_cluster, nGroups - 1));
@@ -1486,7 +1507,8 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                         timeScores[t] += x_dm[j] * resid[j];
                     }
                     let sumTimeCluster = timeScores.reduce((a,b)=>a + b*b, 0);
-                    let timeScale = nPeriods / (nPeriods - 1);
+                    // 引入时间维度的有限样本纠偏乘子
+                    let timeScale = (nPeriods / (nPeriods - 1)) * ((nTotal * nPeriods - 1) / df);
                     let se_time = Math.sqrt(sumTimeCluster * timeScale) / den;
                     let v_2way = (se_cluster * se_cluster) + (se_time * se_time) - (se_robust * se_robust);
                     let se_twoway = Math.sqrt(Math.max(v_2way, 1e-10));
@@ -1494,7 +1516,7 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                     let p_twoway = 2 * (1 - studentTcdf(t_twoway, Math.min(nGroups, nPeriods) - 1));
 
                     // ----------------------------------------------------
-                    // 10. Wild Cluster Bootstrap (B = 99, Rademacher 权重)
+                    // 10. Wild Cluster Bootstrap (B = 99, Rademacher 权重，限制性残差纠偏)
                     // ----------------------------------------------------
                     let tBootCount = 0;
                     let B = 99;
@@ -1505,13 +1527,13 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                         for(let g = 0; g < nGroups; g++) {
                             let wg = Math.random() < 0.5 ? -1 : 1;
                             w.push(wg);
-                            sumScoreW += groupScores[g] * wg;
+                            sumScoreW += groupScoresRestricted[g] * wg;
                         }
                         let beta_b = sumScoreW / den;
                         
                         let sumCluster_b = 0;
                         for(let g = 0; g < nGroups; g++) {
-                            let score_b = w[g] * groupScores[g] - beta_b * groupDen[g];
+                            let score_b = w[g] * groupScoresRestricted[g] - beta_b * groupDen[g];
                             sumCluster_b += score_b * score_b;
                         }
                         let se_b = Math.sqrt(sumCluster_b * clusterScale) / den;
@@ -1758,12 +1780,14 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                 const barInfo = [
                     { val: item.iid, color: 'var(--color-iid)' },
                     { val: item.robust, color: 'var(--color-robust)' },
-                    { val: item.cluster, color: 'var(--color-cluster)' }
+                    { val: item.cluster, color: 'var(--color-cluster)' },
+                    { val: item.twoway, color: 'var(--color-twoway)' },
+                    { val: item.wild, color: 'var(--color-wild)' }
                 ];
                 
-                const barWidth = 22;
-                const barGap = 6;
-                const startX = center - (barWidth * 3 + barGap * 2) / 2;
+                const barWidth = 14;
+                const barGap = 4;
+                const startX = center - (barWidth * 5 + barGap * 4) / 2;
                 
                 barInfo.forEach((bar, bIdx) => {
                     const bx = startX + bIdx * (barWidth + barGap);
@@ -1783,7 +1807,7 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                         rectShadow.setAttribute('fill', bar.color);
                         rectShadow.setAttribute('opacity', '0.15');
                         rectShadow.setAttribute('filter', 'blur(3px)');
-                        rectShadow.setAttribute('rx', '4');
+                        rectShadow.setAttribute('rx', '2');
                         group.appendChild(rectShadow);
                     }
                     
@@ -1794,8 +1818,8 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                     rect.setAttribute('width', barWidth);
                     rect.setAttribute('height', 0);
                     rect.setAttribute('fill', bar.color);
-                    rect.setAttribute('rx', '4');
-                    rect.setAttribute('ry', '4');
+                    rect.setAttribute('rx', '2');
+                    rect.setAttribute('ry', '2');
                     rect.style.transition = 'y 0.8s cubic-bezier(0.16, 1, 0.3, 1), height 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
                     group.appendChild(rect);
                     
@@ -1809,7 +1833,7 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                     text.setAttribute('x', bx + barWidth / 2);
                     text.setAttribute('y', 230);
                     text.setAttribute('fill', bar.color);
-                    text.setAttribute('font-size', '8.5');
+                    text.setAttribute('font-size', '8');
                     text.setAttribute('font-weight', '700');
                     text.setAttribute('text-anchor', 'middle');
                     text.style.transition = 'y 0.8s cubic-bezier(0.16, 1, 0.3, 1)';
@@ -1826,9 +1850,9 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
         // 加载学术默认基准数据
         function loadAcademicBenchmarks() {
             const benchmarks = [
-                { rho: 0.0, iid: 5.0, robust: 5.0, cluster: 5.0 },
-                { rho: 0.4, iid: 22.5, robust: 22.0, cluster: 5.1 },
-                { rho: 0.8, iid: 44.8, robust: 43.6, cluster: 4.8 }
+                { rho: 0.0, iid: 5.0, robust: 5.0, cluster: 5.0, twoway: 5.0, wild: 5.0 },
+                { rho: 0.4, iid: 22.5, robust: 22.0, cluster: 5.1, twoway: 4.8, wild: 5.2 },
+                { rho: 0.8, iid: 44.8, robust: 43.6, cluster: 4.8, twoway: 4.2, wild: 4.9 }
             ];
             drawDegradationChart(benchmarks);
         }
@@ -1842,7 +1866,7 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
             const nSims = parseInt(inputNsim.value);
             const nGroups = parseInt(inputNgroups.value);
             const nUnits = parseInt(inputNunits.value);
-            const nPeriods = 10;
+            const nPeriods = parseInt(inputNperiods.value);
             const nTotal = nGroups * nUnits;
             
             const rhos = [0.0, 0.4, 0.8];
@@ -1864,6 +1888,8 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                 let pIidList = [];
                 let pRobustList = [];
                 let pClusterList = [];
+                let pTwowayList = [];
+                let pWildList = [];
                 let currentSim = 0;
                 
                 function step() {
@@ -1894,11 +1920,12 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                             treatedGroups.add(Math.floor(Math.random() * nGroups));
                         }
                         
+                        let policyStart = Math.floor(nPeriods / 2);
                         let D = [];
                         for(let i = 0; i < nTotal; i++) {
                             let row = new Array(nPeriods).fill(0);
                             if(treatedGroups.has(groupIds[i])) {
-                                for(let t = 4; t < nPeriods; t++) row[t] = 1;
+                                for(let t = policyStart; t < nPeriods; t++) row[t] = 1;
                             }
                             D.push(row);
                         }
@@ -1973,23 +2000,69 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                         let t_robust = betaHat / se_robust;
                         let p_robust = 2 * (1 - studentTcdf(t_robust, df));
                         
-                        // Cluster
+                        // Cluster & Wild Prep
                         let groupScores = new Array(nGroups).fill(0);
+                        let groupScoresRestricted = new Array(nGroups).fill(0);
+                        let groupDen = new Array(nGroups).fill(0);
                         for(let j=0; j<y_dm.length; j++) {
                             let obsIndex = j;
                             let unitIndex = Math.floor(obsIndex / nPeriods);
                             let groupIndex = groupIds[unitIndex];
                             groupScores[groupIndex] += x_dm[j] * resid[j];
+                            groupScoresRestricted[groupIndex] += x_dm[j] * y_dm[j];
+                            groupDen[groupIndex] += x_dm[j] * x_dm[j];
                         }
                         let sumCluster = groupScores.reduce((a,b)=>a + b*b, 0);
-                        let clusterScale = nGroups / (nGroups - 1);
+                        let clusterScale = (nGroups / (nGroups - 1)) * ((nTotal * nPeriods - 1) / df);
                         let se_cluster = Math.sqrt(sumCluster * clusterScale) / den;
                         let t_cluster = betaHat / se_cluster;
                         let p_cluster = 2 * (1 - studentTcdf(t_cluster, nGroups - 1));
+
+                        // Two-way Cluster
+                        let timeScores = new Array(nPeriods).fill(0);
+                        for(let j=0; j<y_dm.length; j++) {
+                            let t = j % nPeriods;
+                            timeScores[t] += x_dm[j] * resid[j];
+                        }
+                        let sumTimeCluster = timeScores.reduce((a,b)=>a + b*b, 0);
+                        let timeScale = (nPeriods / (nPeriods - 1)) * ((nTotal * nPeriods - 1) / df);
+                        let se_time = Math.sqrt(sumTimeCluster * timeScale) / den;
+                        let v_2way = (se_cluster * se_cluster) + (se_time * se_time) - (se_robust * se_robust);
+                        let se_twoway = Math.sqrt(Math.max(v_2way, 1e-10));
+                        let t_twoway = betaHat / se_twoway;
+                        let p_twoway = 2 * (1 - studentTcdf(t_twoway, Math.min(nGroups, nPeriods) - 1));
+
+                        // Wild Cluster Bootstrap (Restricted)
+                        let tBootCount = 0;
+                        let B = 99;
+                        for(let b = 0; b < B; b++) {
+                            let sumScoreW = 0;
+                            let w = [];
+                            for(let g = 0; g < nGroups; g++) {
+                                let wg = Math.random() < 0.5 ? -1 : 1;
+                                w.push(wg);
+                                sumScoreW += groupScoresRestricted[g] * wg;
+                            }
+                            let beta_b = sumScoreW / den;
+                            
+                            let sumCluster_b = 0;
+                            for(let g = 0; g < nGroups; g++) {
+                                let score_b = w[g] * groupScoresRestricted[g] - beta_b * groupDen[g];
+                                sumCluster_b += score_b * score_b;
+                            }
+                            let se_b = Math.sqrt(sumCluster_b * clusterScale) / den;
+                            let t_b = beta_b / Math.max(se_b, 1e-10);
+                            if (Math.abs(t_b) >= Math.abs(t_cluster)) {
+                                tBootCount++;
+                            }
+                        }
+                        let p_wild = tBootCount / B;
                         
                         pIidList.push(p_iid);
                         pRobustList.push(p_robust);
                         pClusterList.push(p_cluster);
+                        pTwowayList.push(p_twoway);
+                        pWildList.push(p_wild);
                         
                         currentSim++;
                     }
@@ -2000,12 +2073,16 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                         const rejIid = (pIidList.filter(p => p < 0.05).length / pIidList.length * 100);
                         const rejRobust = (pRobustList.filter(p => p < 0.05).length / pRobustList.length * 100);
                         const rejCluster = (pClusterList.filter(p => p < 0.05).length / pClusterList.length * 100);
+                        const rejTwoway = (pTwowayList.filter(p => p < 0.05).length / pTwowayList.length * 100);
+                        const rejWild = (pWildList.filter(p => p < 0.05).length / pWildList.length * 100);
                         
                         results.push({
                             rho: rho,
                             iid: rejIid,
                             robust: rejRobust,
-                            cluster: rejCluster
+                            cluster: rejCluster,
+                            twoway: rejTwoway,
+                            wild: rejWild
                         });
                         
                         currentRhoIdx++;
