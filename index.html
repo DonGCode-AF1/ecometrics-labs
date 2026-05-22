@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>实证经济学与计量模拟实验室导航</title>
+    <!-- 引入高档中文字体及图标 -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: rgba(20, 22, 30, 0.6);
+            --border-color: rgba(197, 160, 89, 0.25);
+            --border-hover: rgba(197, 160, 89, 0.6);
+            --text-primary: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --accent-gold: #c5a059;
+            --accent-gold-rgb: 197, 160, 89;
+            --accent-blue: #4ea8de;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(78, 168, 222, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(197, 160, 89, 0.05) 0%, transparent 40%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 4rem 2rem;
+            overflow-x: hidden;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .academy-title {
+            font-family: 'Cinzel', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent-gold);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 0 10px rgba(197, 160, 89, 0.2);
+        }
+
+        .sub-title {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        /* 实验室网格 */
+        .lab-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            width: 100%;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        /* 拟物暗金卡片 */
+        .lab-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 2rem 1.5rem;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .lab-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, transparent, rgba(197, 160, 89, 0.03) 50%, transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .lab-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--border-hover);
+            box-shadow: 0 12px 40px rgba(197, 160, 89, 0.15);
+        }
+
+        .lab-card:hover::before {
+            transform: translateX(100%);
+        }
+
+        .lab-meta {
+            font-size: 0.75rem;
+            color: var(--accent-gold);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 0.8rem;
+            font-weight: 500;
+        }
+
+        .lab-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        .lab-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            font-weight: 300;
+            flex-grow: 1;
+        }
+
+        .lab-action {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--accent-gold);
+            font-weight: 500;
+            gap: 5px;
+            transition: gap 0.2s ease;
+        }
+
+        .lab-card:hover .lab-action {
+            gap: 10px;
+            text-decoration: underline;
+        }
+
+        footer {
+            margin-top: auto;
+            padding-top: 5rem;
+            font-size: 0.8rem;
+            color: rgba(161, 161, 166, 0.4);
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+
+        /* 动画效果 */
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="academy-title">ECONOMETRIC SIMULATION LABS</div>
+        <div class="sub-title">计量经济学与统计仿真交互式沙盒</div>
+    </header>
+
+    <div class="lab-grid">
+        <!-- 卡片 1: BDM (2004) 聚类双重差分 -->
+        <a href="labs/clustering-montecarlo/bdm_simulation_dashboard.html" class="lab-card">
+            <div>
+                <div class="lab-meta">Panel Econometrics</div>
+                <h3 class="lab-name">BDM (2004) 聚类双重差分模拟</h3>
+                <p class="lab-desc">复现 Bertrand, Duflo, Mullainathan (2004) 面板自相关导致 OLS 拒绝率飙升至 45% 的灾难。深度对比 IID, HC1, 单向/双向聚类与 Wild Bootstrap 差异，支持动态核密度与置信区间渲染。</p>
+            </div>
+            <div class="lab-action">进入实验 ➔</div>
+        </a>
+
+        <!-- 卡片 2: CLT -->
+        <a href="labs/clt-demo/clt_dashboard.html" class="lab-card">
+            <div>
+                <div class="lab-meta">Theorem Simulator</div>
+                <h3 class="lab-name">中心极限定理 (CLT)</h3>
+                <p class="lab-desc">见证任意给定的离散或连续母体分布，在样本容量 N 逼近无穷的过程中，其样本均值分布如何被“大自然之手”无形收敛为完美的钟形正态分布。</p>
+            </div>
+            <div class="lab-action">进入实验 ➔</div>
+        </a>
+
+        <!-- 卡片 3: LLN -->
+        <a href="labs/coin-toss-demo/coin_toss_dashboard.html" class="lab-card">
+            <div>
+                <div class="lab-meta">Probability Lab</div>
+                <h3 class="lab-name">大数定律硬币实验 (LLN)</h3>
+                <p class="lab-desc">通过数万次微观掷硬币的并行蒙特卡洛轨线，动态模拟并展示试验均值向真实理论概率收敛的物理级视觉震荡。</p>
+            </div>
+            <div class="lab-action">进入实验 ➔</div>
+        </a>
+
+        <!-- 卡片 4: OLS -->
+        <a href="labs/ols-properties-demo/ols_validator_dashboard.html" class="lab-card">
+            <div>
+                <div class="lab-meta">Classical Regression</div>
+                <h3 class="lab-name">OLS 高斯马尔可夫体检</h3>
+                <p class="lab-desc">直观拆解 OLS 估计量的无偏性与 BLUE（最佳线性无偏估计）性质，动态评估异方差与扰动项方差对经典估计的侵害。</p>
+            </div>
+            <div class="lab-action">进入实验 ➔</div>
+        </a>
+
+        <!-- 卡片 5: OVB -->
+        <a href="labs/monte-carlo-demo/mc_dashboard.html" class="lab-card">
+            <div>
+                <div class="lab-meta">Endogeneity Analysis</div>
+                <h3 class="lab-name">遗漏变量偏差 (OVB)</h3>
+                <p class="lab-desc">物理级仿真当遗漏了与回归元共变混淆因子时，估计系数产生的系统性偏倚与推断崩溃过程。</p>
+            </div>
+            <div class="lab-action">进入实验 ➔</div>
+        </a>
+
+        <!-- 卡片 6: IV -->
+        <a href="labs/iv-simulation-demo/iv_dashboard.html" class="lab-card">
+            <div>
+                <div class="lab-meta">Instrumental Variable</div>
+                <h3 class="lab-name">工具变量与 2SLS 偏误</h3>
+                <p class="lab-desc">动态调节工具变量强度，直观揭示弱工具变量偏误下 2SLS 估计量如何向 OLS 的错误方向漂移，以及排他性约束破缺的严重后果。</p>
+            </div>
+            <div class="lab-action">进入实验 ➔</div>
+        </a>
+    </div>
+
+    <footer>
+        © 2026 DonGCode-AF1. Econometric Empirical Sandbox. Built with Passion & Rigor.
+    </footer>
+
+</body>
+</html>
