@@ -1129,14 +1129,14 @@ def run_sim(rho=0.8, n_units=500, n_periods=10, n_groups=50):
                         <details class="premium-details" style="margin-top: 1rem; margin-bottom: 0; padding: 0.5rem 0.75rem;">
                             <summary class="premium-summary" style="font-size: 0.75rem; color: var(--text-secondary);">💡 侵害规律与退化速度分析解读</summary>
                             <div class="details-content" style="font-size: 0.75rem; line-height: 1.4; padding-top: 0.5rem;">
-                                <p style="margin-bottom: 0.5rem;"><strong>窗口含义</strong>：本图汇总展示了在三种自相关强度环境下，三种推断方法的实际假阳性率（误诊率）。</p>
-                                <p style="margin-bottom: 0.5rem;"><strong>退化规律直觉</strong>：</p>
+                                <p style="margin-bottom: 0.5rem;"><strong>窗口含义</strong>：本图汇总展示了在三种自相关强度环境下，全五种统计推断方法的实际假阳性率（误诊率），进行高维度退化侵害速度的直观比对。</p>
+                                <p style="margin-bottom: 0.5rem;"><strong>退化与侵害防守直觉</strong>：</p>
                                 <ul style="margin-left: 1.2rem; margin-bottom: 0.5rem;">
-                                    <li>当 <em>&rho;</em> = 0.0（纯随机无自相关）时，所有方法都极为诚实地逼近标称的 5% 红线，无任何偏误。</li>
-                                    <li>一旦引入轻微的自相关（<em>&rho;</em> = 0.4），忽视序列相关的 IID 经典与 HC1 稳健标准误立即失守，实际拒绝率飙升至 20% 左右（翻了四倍！）。</li>
-                                    <li>当自相关系数达到严重水准（<em>&rho;</em> = 0.8）时，灾难彻底爆发：经典方法误诊率高达 40% ~ 45%。这与 BDM (2004) 复现 of 学术结论完全吻合。</li>
+                                    <li>当 <em>&rho;</em> = 0.0（纯随机无自相关）时，所有五种推断方法都极为诚实地逼近标称的 5% 红线，推断完全可信。</li>
+                                    <li>一旦引入轻微的自相关（<em>&rho;</em> = 0.4），忽视序列相关的 IID 经典与 HC1 稳健标准误瞬间失守，误诊拒绝率立即飙升至 20% 左右（假阳性增加 4 倍）。</li>
+                                    <li>当自相关系数达到严重水准（<em>&rho;</em> = 0.8）时，传统方法彻底崩溃，假阳性率飙升至 40% ~ 45%（与 BDM (2004) 复现 of 学术结论完全一致）。</li>
                                 </ul>
-                                <p><strong>聚类救赎</strong>：相比之下，无论自回归相关性 <em>&rho;</em> 如何恶化，<strong>省份级单向聚类标准误</strong>始终稳扎稳打，牢牢把守在 5% 的诚实推断防线，完成了绝妙的统计救赎。</p>
+                                <p><strong>聚类与 Wild Bootstrap 的三重防守</strong>：相比之下，无论自回归相关性 <em>&rho;</em> 如何恶化，<strong>省份级单向聚类标准误</strong>、<strong>省份与时间双向聚类标准误</strong>以及<strong>限制性 Wild Cluster Bootstrap</strong> 始终坚守阵地，牢牢把守在 5% 的诚实推断防线附近。特别是在小样本（少数处理组）极端退化场景下，限制性 Wild Cluster Bootstrap 展现出了最具学术级韧性的抽样偏误纠偏效果，完成了终极的统计救赎。</p>
                             </div>
                         </details>
                     </div>

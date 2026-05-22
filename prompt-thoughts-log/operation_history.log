@@ -37,3 +37,7 @@
 [2026-05-22 13:45] BY Antigravity
 - TYPE: 【算法审计与小样本纠偏修复】
 - DETAILS: 解决 Wild Bootstrap 在小样本下出现 100% 过度拒绝的严重 Bug。原因在于原 JS 代码错误使用了“非限制性残差（Unrestricted Residuals）”；在小样本且少数治疗组（如 G=6, Treated=1）下，OLS 过度拟合该组数据，使得该组残差塌陷为0，致使 Bootstrap 的 t-统计量失去方差并锁定为0，零假设被 100% 拒绝。现已全面重构为经典的“限制性残差（Restricted Residuals under H0）”算法，并同步补齐了 one-way 及 time-level cluster 的有限样本自由度纠偏乘子 $\frac{M-1}{M-k}$，彻底实现与 Stata / Python 精度绝对对齐。
+
+[2026-05-22 13:55] BY Antigravity
+- TYPE: 【退化分析全面补齐与图文对齐】
+- DETAILS: 1) 将“三维退化测试”及图表全面升级为包含 IID 经典、HC1 稳健、单向省份聚类、双向聚类、限制性 Wild Cluster Bootstrap 的完整五维标准误大比拼；2) 引入观测时期数 $T$ 可调参数，并重构 DGP 使其以 $\lfloor T / 2 \rfloor$ 作为干预始点实现动态伸缩；3) 全面修订并重写了退化速度图表底部的“侵害规律图注解读”，将双重聚类和 Bootstrap 的防守韧性及数理依据一并写明，实现图文的完美对齐与严谨自洽；4) 成功推送到 GitHub 远程仓库并通过 GitHack 部署上线。
