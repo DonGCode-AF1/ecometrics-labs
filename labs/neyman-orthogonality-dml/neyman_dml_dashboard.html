@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Neyman 正交性与 Double Machine Learning</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --ink: #17202a;
+      --muted: #5c6875;
+      --line: #d7dde5;
+      --blue: #245a9a;
+      --teal: #23785f;
+      --red: #a74646;
+      --amber: #9a6424;
+      --code-bg: #111827;
+      --code-fg: #e5e7eb;
+      --shadow: 0 16px 42px rgba(23, 32, 42, 0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Microsoft YaHei", "Noto Sans CJK SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      line-height: 1.72;
+    }
+    header {
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+    .wrap {
+      width: min(1120px, calc(100% - 36px));
+      margin: 0 auto;
+    }
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.88fr);
+      gap: 36px;
+      align-items: center;
+      padding: 54px 0 40px;
+    }
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(32px, 5vw, 54px);
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+    .lead {
+      margin: 0;
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 19px;
+    }
+    .hero-visual {
+      min-height: 280px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+    .hero-visual canvas { height: 240px; }
+    nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 14px 0;
+      border-top: 1px solid var(--line);
+    }
+    nav a {
+      color: var(--blue);
+      text-decoration: none;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    nav a:hover { background: #edf3fb; }
+    main { padding: 30px 0 58px; }
+    section { margin: 30px 0; }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 27px;
+      line-height: 1.32;
+      letter-spacing: 0;
+    }
+    h3 { margin: 0 0 8px; font-size: 19px; }
+    p { margin: 0 0 14px; }
+    .band {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: clamp(22px, 4vw, 34px);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+    .span-5 { grid-column: span 5; }
+    .span-6 { grid-column: span 6; }
+    .span-7 { grid-column: span 7; }
+    .span-12 { grid-column: span 12; }
+    .tag {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #edf3fb;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .formula {
+      margin: 14px 0;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f3f6fa;
+      overflow-x: auto;
+      font-family: "Times New Roman", serif;
+      font-size: 20px;
+      white-space: nowrap;
+    }
+    .note, .warn {
+      margin-top: 14px;
+      padding: 13px 15px;
+      border-radius: 6px;
+    }
+    .note { border-left: 4px solid var(--teal); background: #edf8f4; }
+    .warn { border-left: 4px solid var(--red); background: #fbefef; }
+    canvas {
+      width: 100%;
+      height: 330px;
+      display: block;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+    .caption {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      padding: 16px;
+    }
+    .metric-label {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .metric-value {
+      margin-top: 4px;
+      font-size: 32px;
+      font-weight: 900;
+      line-height: 1.1;
+    }
+    .blue { color: var(--blue); }
+    .teal { color: var(--teal); }
+    .red { color: var(--red); }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .step {
+      min-height: 126px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+      padding: 15px;
+    }
+    .step strong { display: block; margin-bottom: 6px; }
+    .small { color: var(--muted); font-size: 14px; }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+    button {
+      border: 1px solid #1c4778;
+      border-radius: 6px;
+      background: var(--blue);
+      color: #fff;
+      font: inherit;
+      font-weight: 800;
+      padding: 9px 13px;
+      cursor: pointer;
+    }
+    button:hover { background: #1c4778; }
+    label {
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 14px;
+    }
+    input[type="range"] { width: 180px; accent-color: var(--blue); }
+    pre {
+      margin: 16px 0 0;
+      padding: 18px;
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid #2b3443;
+      background: var(--code-bg);
+      color: var(--code-fg);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    footer {
+      padding: 34px 0 46px;
+      color: var(--muted);
+      text-align: center;
+      border-top: 1px solid var(--line);
+      background: #fff;
+    }
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; }
+      .span-5, .span-6, .span-7 { grid-column: span 12; }
+      .steps, .metrics { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="hero">
+        <div>
+          <span class="tag">计量经济学理解项目</span>
+          <h1>Neyman 正交性与 Double Machine Learning</h1>
+          <p class="lead">
+            用一个“培训影响工资”的最小模拟说明：为什么普通回归会把背景差异误当成因果效应，
+            以及 DML 如何通过双重残差化，让第一阶段预测模型的小误差不容易污染最终的处理效应估计。
+          </p>
+        </div>
+        <div class="hero-visual">
+          <canvas id="chartConcept"></canvas>
+          <p class="caption">背景变量 X 同时影响处理 D 和结果 Y；目标是识别 D 对 Y 的因果效应。</p>
+        </div>
+      </div>
+      <nav aria-label="页面导航">
+        <a href="#intuition">核心直觉</a>
+        <a href="#why">混杂问题</a>
+        <a href="#dml">DML 步骤</a>
+        <a href="#simulation">交互模拟</a>
+        <a href="#orthogonality">正交性</a>
+        <a href="#code">最小代码</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section id="intuition" class="band">
+      <span class="tag">一句话</span>
+      <h2>先清理背景，再估计剩余变动之间的关系</h2>
+      <p>
+        Neyman 正交性的直觉是：让机器学习负责从 <strong>Y</strong> 和 <strong>D</strong> 中清理背景变量
+        <strong>X</strong> 能解释的部分，但不要让机器学习模型直接给出因果结论。最后只用“清理背景之后剩下的变动”
+        来估计处理效应。
+      </p>
+      <div class="formula">Y = θD + g(X) + U, &nbsp;&nbsp;&nbsp; D = m(X) + V</div>
+      <p>
+        其中 <strong>θ</strong> 是真正关心的处理效应；<strong>g(X)</strong> 与
+        <strong>m(X)</strong> 是辅助函数，负责吸收背景变量造成的系统性差异。
+      </p>
+    </section>
+
+    <section id="why">
+      <h2>为什么直接回归会错？</h2>
+      <div class="grid">
+        <div class="band span-5">
+          <h3>混杂来自同一个背景变量</h3>
+          <p>
+            假设教育、能力、地区等背景变量 <strong>X</strong> 同时影响两件事：一个人是否参加培训
+            <strong>D</strong>，以及他的工资 <strong>Y</strong>。这时直接比较参加培训者和未参加者，
+            比较到的不是纯粹培训效应。
+          </p>
+          <div class="warn">
+            直接回归 <code>Y ~ D</code> 会把“背景更好的人更可能参加培训”也算进培训效果里。
+          </div>
+        </div>
+        <div class="band span-7">
+          <canvas id="chartNaive"></canvas>
+          <p class="caption">普通回归使用原始 D 和原始 Y。斜率会混入 X 的影响，因此通常偏离真实效应。</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="dml" class="band">
+      <h2>DML 做了什么？</h2>
+      <p>DML 的重点不是“用了机器学习”本身，而是下面这个正交化结构。</p>
+      <div class="steps">
+        <div class="step"><strong>1. 预测结果</strong><span class="small">用 X 预测 Y：<br>ĝ(X) ≈ E[Y|X]</span></div>
+        <div class="step"><strong>2. 得到结果残差</strong><span class="small">Ỹ = Y − ĝ(X)</span></div>
+        <div class="step"><strong>3. 预测处理</strong><span class="small">用 X 预测 D：<br>m̂(X) ≈ E[D|X]</span></div>
+        <div class="step"><strong>4. 得到处理残差</strong><span class="small">D̃ = D − m̂(X)</span></div>
+      </div>
+      <div class="formula">最终估计：&nbsp;&nbsp; Ỹ = θD̃ + error</div>
+      <p>
+        换句话说，DML 问的是：在去掉背景变量 X 能解释的部分之后，培训中剩下的变化，是否还能解释工资中剩下的变化？
+      </p>
+    </section>
+
+    <section id="simulation">
+      <h2>交互模拟：普通回归 vs 正交残差回归</h2>
+      <div class="grid">
+        <div class="band span-6">
+          <canvas id="chartRaw"></canvas>
+          <p class="caption">原始数据中的关系：D 和 Y 的相关性混入了背景变量 X。</p>
+        </div>
+        <div class="band span-6">
+          <canvas id="chartDml"></canvas>
+          <p class="caption">残差数据中的关系：D̃ 和 Ỹ 更接近真正的处理效应。</p>
+        </div>
+        <div class="band span-12">
+          <h3>模拟结果</h3>
+          <div class="metrics">
+            <div class="metric"><div class="metric-label">真实 θ</div><div class="metric-value blue" id="thetaTrue">2.00</div></div>
+            <div class="metric"><div class="metric-label">直接回归估计</div><div class="metric-value red" id="thetaNaive">--</div></div>
+            <div class="metric"><div class="metric-label">DML / 正交估计</div><div class="metric-value teal" id="thetaDml">--</div></div>
+          </div>
+          <div class="controls">
+            <button type="button" id="rerun">重新模拟</button>
+            <label for="noise">第一阶段预测误差</label>
+            <input id="noise" type="range" min="0" max="0.6" value="0.12" step="0.03">
+            <span class="small" id="noiseValue">0.12</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="orthogonality" class="band">
+      <h2>Neyman 正交性体现在哪里？</h2>
+      <p>关键在这个 moment 结构：</p>
+      <div class="formula">ψ(W; θ, η) = (D − m(X)) [Y − g(X) − θ(D − m(X))]</div>
+      <p>它的设计目标是：第一阶段的 ĝ(X) 和 m̂(X) 出现小误差时，这些误差不会以“一阶”的方式直接传导到 θ。</p>
+      <div class="note">
+        直白理解：第一阶段模型抖了一点，最终 θ 不会跟着线性大幅抖动；主要影响被压到二阶项，比如误差平方或误差乘积。
+      </div>
+      <p>所以 DML 不是说第一阶段可以乱估，而是说第一阶段不必完美。只要估得足够合理，正交结构会降低它对最终因果参数的污染。</p>
+    </section>
+
+    <section id="code" class="band">
+      <h2>最小 Python 代码</h2>
+      <p>下面是可复制运行的最小版本。它用随机森林估计两个辅助函数，再用残差回归估计 θ。</p>
+      <pre><code>import numpy as np
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+
+np.random.seed(42)
+n = 2000
+p = 5
+X = np.random.normal(size=(n, p))
+theta_true = 2.0
+
+# 背景 X 影响培训 D
+m_X = 0.8 * X[:, 0] - 0.5 * X[:, 1] + 0.3 * X[:, 2] ** 2
+D = m_X + np.random.normal(size=n)
+
+# 背景 X 也影响工资 Y
+g_X = 1.5 * X[:, 0] + np.sin(X[:, 1]) + 0.5 * X[:, 2] ** 2
+Y = theta_true * D + g_X + np.random.normal(size=n)
+
+# 错误做法：直接回归 Y ~ D
+naive = LinearRegression()
+naive.fit(D.reshape(-1, 1), Y)
+theta_naive = naive.coef_[0]
+
+# 样本切分：避免同一批数据既训练 ML 又做最终估计
+X_train, X_test, D_train, D_test, Y_train, Y_test = train_test_split(
+    X, D, Y, test_size=0.5, random_state=42
+)
+
+model_y = RandomForestRegressor(n_estimators=200, max_depth=5, random_state=42)
+model_d = RandomForestRegressor(n_estimators=200, max_depth=5, random_state=42)
+model_y.fit(X_train, Y_train)
+model_d.fit(X_train, D_train)
+
+Y_res = Y_test - model_y.predict(X_test)
+D_res = D_test - model_d.predict(X_test)
+
+dml = LinearRegression(fit_intercept=False)
+dml.fit(D_res.reshape(-1, 1), Y_res)
+theta_dml = dml.coef_[0]
+
+print("真实 theta:", theta_true)
+print("直接回归 theta:", theta_naive)
+print("DML / Neyman 正交 theta:", theta_dml)</code></pre>
+    </section>
+
+    <section class="band">
+      <h2>一句话收束</h2>
+      <p>普通回归问的是：参加培训的人工资是否更高？</p>
+      <p>DML / Neyman 正交问的是：在扣除背景变量 X 能解释的部分之后，培训的剩余变化是否还能解释工资的剩余变化？</p>
+      <div class="note">不要让机器学习直接给出因果结论，而是让它清理混杂，再用清理后的剩余变动估计因果效应。</div>
+    </section>
+  </main>
+
+  <footer>Neyman 正交性 · Double Machine Learning · 计量经济学学习项目</footer>
+
+  <script>
+    function mulberry32(seed) {
+      return function() {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+    let seed = 42;
+    let rand = mulberry32(seed);
+    function normal() {
+      let u = 0, v = 0;
+      while (u === 0) u = rand();
+      while (v === 0) v = rand();
+      return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+    }
+    function linreg(x, y, intercept = true) {
+      const n = x.length;
+      if (intercept) {
+        const mx = x.reduce((a, b) => a + b, 0) / n;
+        const my = y.reduce((a, b) => a + b, 0) / n;
+        let num = 0, den = 0;
+        for (let i = 0; i < n; i++) {
+          num += (x[i] - mx) * (y[i] - my);
+          den += (x[i] - mx) * (x[i] - mx);
+        }
+        const slope = num / den;
+        return { slope, alpha: my - slope * mx };
+      }
+      let num = 0, den = 0;
+      for (let i = 0; i < n; i++) {
+        num += x[i] * y[i];
+        den += x[i] * x[i];
+      }
+      return { slope: num / den, alpha: 0 };
+    }
+    function scale(val, min, max, outMin, outMax) {
+      return outMin + (val - min) * (outMax - outMin) / (max - min);
+    }
+    function setupCanvas(canvas) {
+      const ctx = canvas.getContext("2d");
+      const ratio = window.devicePixelRatio || 1;
+      const cssW = canvas.clientWidth;
+      const cssH = canvas.clientHeight;
+      canvas.width = cssW * ratio;
+      canvas.height = cssH * ratio;
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      ctx.clearRect(0, 0, cssW, cssH);
+      return { ctx, w: cssW, h: cssH };
+    }
+    function drawScatter(canvasId, x, y, reg, opts) {
+      const { ctx, w, h } = setupCanvas(document.getElementById(canvasId));
+      const pad = 46;
+      const xmin = Math.min(...x), xmax = Math.max(...x);
+      const ymin = Math.min(...y), ymax = Math.max(...y);
+      const xr = xmax - xmin || 1, yr = ymax - ymin || 1;
+      const minX = xmin - xr * 0.08, maxX = xmax + xr * 0.08;
+      const minY = ymin - yr * 0.08, maxY = ymax + yr * 0.08;
+      ctx.strokeStyle = "#d7dde5";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad, h - pad);
+      ctx.lineTo(w - pad, h - pad);
+      ctx.lineTo(w - pad, pad);
+      ctx.stroke();
+      ctx.fillStyle = "#5c6875";
+      ctx.font = "13px Microsoft YaHei, sans-serif";
+      ctx.fillText(opts.xlabel, Math.max(pad, w / 2 - 68), h - 13);
+      ctx.save();
+      ctx.translate(15, h / 2 + 58);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText(opts.ylabel, 0, 0);
+      ctx.restore();
+      ctx.fillStyle = opts.pointColor;
+      for (let i = 0; i < x.length; i++) {
+        const px = scale(x[i], minX, maxX, pad, w - pad);
+        const py = scale(y[i], minY, maxY, h - pad, pad);
+        ctx.beginPath();
+        ctx.arc(px, py, 2.3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const x1 = minX, x2 = maxX;
+      const y1 = reg.alpha + reg.slope * x1;
+      const y2 = reg.alpha + reg.slope * x2;
+      ctx.strokeStyle = opts.lineColor;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(scale(x1, minX, maxX, pad, w - pad), scale(y1, minY, maxY, h - pad, pad));
+      ctx.lineTo(scale(x2, minX, maxX, pad, w - pad), scale(y2, minY, maxY, h - pad, pad));
+      ctx.stroke();
+      ctx.fillStyle = "#17202a";
+      ctx.font = "bold 15px Microsoft YaHei, sans-serif";
+      ctx.fillText(`${opts.title}：斜率 ≈ ${reg.slope.toFixed(2)}`, pad, 25);
+    }
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+    function drawConcept() {
+      const { ctx, w, h } = setupCanvas(document.getElementById("chartConcept"));
+      const nodes = [
+        { x: w * 0.19, y: h * 0.38, label: "背景 X", color: "#f7efe8" },
+        { x: w * 0.66, y: h * 0.24, label: "处理 D", color: "#edf3fb" },
+        { x: w * 0.66, y: h * 0.66, label: "结果 Y", color: "#edf8f4" },
+      ];
+      function box(n) {
+        ctx.fillStyle = n.color;
+        ctx.strokeStyle = "#d7dde5";
+        roundRect(ctx, n.x - 54, n.y - 24, 108, 48, 10);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = "#17202a";
+        ctx.font = "bold 15px Microsoft YaHei, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(n.label, n.x, n.y + 5);
+      }
+      function arrow(a, b, label, color, bend = 0) {
+        ctx.strokeStyle = color;
+        ctx.fillStyle = color;
+        ctx.lineWidth = 2.4;
+        const sx = a.x + 58, sy = a.y;
+        const ex = b.x - 58, ey = b.y;
+        const cx = (sx + ex) / 2, cy = (sy + ey) / 2 + bend;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.quadraticCurveTo(cx, cy, ex, ey);
+        ctx.stroke();
+        const ang = Math.atan2(ey - cy, ex - cx);
+        ctx.beginPath();
+        ctx.moveTo(ex, ey);
+        ctx.lineTo(ex - 10 * Math.cos(ang - Math.PI / 6), ey - 10 * Math.sin(ang - Math.PI / 6));
+        ctx.lineTo(ex - 10 * Math.cos(ang + Math.PI / 6), ey - 10 * Math.sin(ang + Math.PI / 6));
+        ctx.closePath();
+        ctx.fill();
+        ctx.font = "12px Microsoft YaHei, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText(label, cx, cy - 8);
+      }
+      arrow(nodes[0], nodes[1], "影响处理选择", "#9a6424", -12);
+      arrow(nodes[0], nodes[2], "影响结果", "#9a6424", 12);
+      ctx.strokeStyle = "#245a9a";
+      ctx.fillStyle = "#245a9a";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(nodes[1].x, nodes[1].y + 32);
+      ctx.lineTo(nodes[2].x, nodes[2].y - 32);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(nodes[2].x, nodes[2].y - 32);
+      ctx.lineTo(nodes[2].x - 7, nodes[2].y - 44);
+      ctx.lineTo(nodes[2].x + 7, nodes[2].y - 44);
+      ctx.closePath();
+      ctx.fill();
+      ctx.font = "bold 13px Microsoft YaHei, sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText("目标 θ", nodes[1].x + 18, (nodes[1].y + nodes[2].y) / 2);
+      nodes.forEach(box);
+    }
+    function simulate() {
+      rand = mulberry32(seed);
+      const n = 760;
+      const theta = 2.0;
+      const firstStageNoise = Number(document.getElementById("noise").value);
+      const D = [], Y = [], Dres = [], Yres = [];
+      for (let i = 0; i < n; i++) {
+        const x0 = normal(), x1 = normal(), x2 = normal();
+        const m = 0.8 * x0 - 0.5 * x1 + 0.3 * x2 * x2;
+        const d = m + normal();
+        const g = 1.5 * x0 + Math.sin(x1) + 0.5 * x2 * x2;
+        const y = theta * d + g + normal();
+        D.push(d);
+        Y.push(y);
+        Dres.push(d - (m + firstStageNoise * normal()));
+        Yres.push(y - (g + firstStageNoise * normal()));
+      }
+      const naiveReg = linreg(D, Y, true);
+      const dmlReg = linreg(Dres, Yres, false);
+      document.getElementById("thetaTrue").textContent = theta.toFixed(2);
+      document.getElementById("thetaNaive").textContent = naiveReg.slope.toFixed(2);
+      document.getElementById("thetaDml").textContent = dmlReg.slope.toFixed(2);
+      document.getElementById("noiseValue").textContent = firstStageNoise.toFixed(2);
+      drawConcept();
+      drawScatter("chartNaive", D, Y, naiveReg, {
+        title: "普通回归 Y ~ D",
+        xlabel: "D：培训参与程度",
+        ylabel: "Y：工资",
+        pointColor: "rgba(167, 70, 70, 0.34)",
+        lineColor: "#a74646",
+      });
+      drawScatter("chartRaw", D, Y, naiveReg, {
+        title: "普通回归 Y ~ D",
+        xlabel: "D：培训参与程度",
+        ylabel: "Y：工资",
+        pointColor: "rgba(167, 70, 70, 0.34)",
+        lineColor: "#a74646",
+      });
+      drawScatter("chartDml", Dres, Yres, dmlReg, {
+        title: "残差回归 Ỹ ~ D̃",
+        xlabel: "D̃：去背景后的培训残差",
+        ylabel: "Ỹ：去背景后的工资残差",
+        pointColor: "rgba(35, 120, 95, 0.34)",
+        lineColor: "#23785f",
+      });
+    }
+    document.getElementById("rerun").addEventListener("click", () => {
+      seed += 17;
+      simulate();
+    });
+    document.getElementById("noise").addEventListener("input", simulate);
+    window.addEventListener("resize", simulate);
+    simulate();
+  </script>
+</body>
+</html>

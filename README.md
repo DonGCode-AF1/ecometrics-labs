@@ -68,6 +68,7 @@ jupyter notebook
 | **[ols-properties-demo](labs/ols-properties-demo/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/ols-properties-demo/ols_validator_dashboard.html) | **OLS 估计量性质体检**：动态模拟与检验 Gauss-Markov 定理中的无偏性与 BLUE 性质。 | 📈 **抽样分布直方图**<br>🎚️ **样本量与扰动方差** |
 | **[monte-carlo-demo](labs/monte-carlo-demo/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/monte-carlo-demo/mc_dashboard.html) | **遗漏变量偏差 (OVB)**：展示未控制共变混淆因子时，估计系数产生的系统性偏倚。 | 📈 **偏差动态轨迹**<br>🎚️ **变量间相关系数** |
 | **[iv-simulation-demo](labs/iv-simulation-demo/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/iv-simulation-demo/iv_dashboard.html) | **工具变量与 2SLS**：动态调节工具变量强度，揭示弱工具变量偏误及排他性约束破缺。 | 📈 **弱工具估算漂移图**<br>🎚️ **工具强度与相关性系数** |
+| **[neyman-orthogonality-dml](labs/neyman-orthogonality-dml/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/neyman-orthogonality-dml/neyman_dml_dashboard.html) | **Neyman 正交性与 Double Machine Learning**：用“培训影响工资”的最小案例解释双重残差化如何削弱第一阶段预测误差对因果参数的污染。 | 🎚️ **第一阶段预测误差滑块**<br>🔁 **重新模拟按钮**<br>📈 **普通回归 vs 正交残差回归双图对照** |
 
 | **[lab_design_template.ipynb](labs/lab_design_template.ipynb)** | **实验开发模板**：规范了未来新增学术概念（如内生性偏误、多期 DID、工具变量强度等）的实验设计架构。 | 供未来追加 Lab 的通用组件模板 |
 
