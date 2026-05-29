@@ -70,6 +70,7 @@ jupyter notebook
 | **[iv-simulation-demo](labs/iv-simulation-demo/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/iv-simulation-demo/iv_dashboard.html) | **工具变量与 2SLS**：动态调节工具变量强度，揭示弱工具变量偏误及排他性约束破缺。 | 📈 **弱工具估算漂移图**<br>🎚️ **工具强度与相关性系数** |
 | **[neyman-orthogonality-dml](labs/neyman-orthogonality-dml/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/neyman-orthogonality-dml/neyman_dml_dashboard.html) | **Neyman 正交性与 Double Machine Learning**：用“培训影响工资”的最小案例解释双重残差化如何削弱第一阶段预测误差对因果参数的污染。 | 🎚️ **第一阶段预测误差滑块**<br>🔁 **重新模拟按钮**<br>📈 **普通回归 vs 正交残差回归双图对照** |
 | **[dml-cross-fitting](labs/dml-cross-fitting/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/dml-cross-fitting/dml_cross_fitting_dashboard.html) | **DML 交叉拟合**：用 12 个观测、3 折训练/留出样板解释折外预测、折外残差与第二阶段 θ̂ 的关系。 | 🧩 **三折轮换示意图**<br>📊 **样本表与残差表**<br>📈 **折外残差回归图** |
+| **[causal-forest](labs/causal-forest/)**<br>🌐 [网页版直开](https://raw.githack.com/DonGCode-AF1/ecometrics-labs/master/labs/causal-forest/causal_forest_dashboard.html) | **因果森林与异质性处理效应**：用职业培训模拟数据解释 CATE、局部叶内比较、森林汇总和“谁更受益”的政策含义。 | 🌳 **因果树示意图**<br>📊 **模拟数据表**<br>📈 **CATE 分组图与代码案例** |
 
 | **[lab_design_template.ipynb](labs/lab_design_template.ipynb)** | **实验开发模板**：规范了未来新增学术概念（如内生性偏误、多期 DID、工具变量强度等）的实验设计架构。 | 供未来追加 Lab 的通用组件模板 |
 

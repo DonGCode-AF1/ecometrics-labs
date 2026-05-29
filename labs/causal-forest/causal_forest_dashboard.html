@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>因果森林：异质性处理效应的直观理解</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #627080;
+      --line: #d8dee8;
+      --blue: #315f9c;
+      --green: #2f7d4f;
+      --orange: #b26b2b;
+      --red: #a64545;
+      --purple: #6d4aa2;
+      --code: #111827;
+      --codefg: #e5e7eb;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Microsoft YaHei", Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      line-height: 1.65;
+    }
+    header {
+      background: linear-gradient(135deg, #eef3fa, #ffffff);
+      border-bottom: 1px solid var(--line);
+      padding: 54px 22px 36px;
+    }
+    .wrap { max-width: 1160px; margin: 0 auto; }
+    h1 {
+      margin: 0 0 14px;
+      font-size: clamp(30px, 4vw, 48px);
+      line-height: 1.15;
+    }
+    .lead {
+      max-width: 920px;
+      color: var(--muted);
+      font-size: 19px;
+      margin: 0;
+    }
+    main { padding: 26px 22px 50px; }
+    h2 {
+      margin: 40px 0 16px;
+      font-size: 26px;
+      border-left: 5px solid var(--blue);
+      padding-left: 12px;
+    }
+    h3 { margin: 18px 0 10px; font-size: 20px; }
+    p { margin: 0 0 14px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 22px;
+      box-shadow: 0 8px 24px rgba(31, 41, 51, 0.055);
+      margin: 18px 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 18px;
+    }
+    .span4 { grid-column: span 4; }
+    .span5 { grid-column: span 5; }
+    .span6 { grid-column: span 6; }
+    .span7 { grid-column: span 7; }
+    .span8 { grid-column: span 8; }
+    .span12 { grid-column: span 12; }
+    @media (max-width: 860px) {
+      .span4, .span5, .span6, .span7, .span8 { grid-column: span 12; }
+    }
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background: #eaf0f8;
+      color: var(--blue);
+      font-weight: 800;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .formula {
+      font-family: "Times New Roman", serif;
+      font-size: 20px;
+      background: #f2f5f9;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 16px;
+      overflow-x: auto;
+      margin: 14px 0;
+    }
+    .note {
+      border-left: 4px solid var(--green);
+      background: #eef8f1;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 16px 0;
+    }
+    .warn {
+      border-left: 4px solid var(--orange);
+      background: #fff4e8;
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin: 16px 0;
+    }
+    canvas {
+      width: 100%;
+      height: 330px;
+      display: block;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+    .caption {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    @media (max-width: 760px) { .metric-row { grid-template-columns: 1fr 1fr; } }
+    .metric {
+      background: #fbfcfd;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .metric .label { color: var(--muted); font-size: 13px; }
+    .metric .value { font-weight: 850; font-size: 28px; margin-top: 4px; }
+    .blue { color: var(--blue); }
+    .green { color: var(--green); }
+    .orange { color: var(--orange); }
+    .red { color: var(--red); }
+    .purple { color: var(--purple); }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    th, td {
+      padding: 10px 9px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      white-space: nowrap;
+    }
+    th { background: #f1f4f8; color: #344150; font-weight: 800; }
+    td:first-child, th:first-child { text-align: center; }
+    .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; }
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    @media (max-width: 900px) { .flow { grid-template-columns: 1fr; } }
+    .flow-step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfd;
+      padding: 14px;
+    }
+    .flow-step strong { display: block; color: var(--blue); margin-bottom: 6px; }
+    pre {
+      background: var(--code);
+      color: var(--codefg);
+      padding: 18px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 14px;
+      line-height: 1.5;
+      border: 1px solid #2b3443;
+    }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace; }
+    .controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 12px 0 0;
+    }
+    button {
+      border: 1px solid #1c4778;
+      background: var(--blue);
+      color: white;
+      border-radius: 8px;
+      padding: 9px 12px;
+      cursor: pointer;
+      font-weight: 800;
+    }
+    input[type="range"] { width: 190px; accent-color: var(--blue); }
+    footer { text-align: center; color: var(--muted); padding: 34px 22px; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>因果森林：异质性处理效应的直观理解</h1>
+    <p class="lead">
+      因果森林回答的问题不是“培训平均有没有用”，而是“对谁更有用”。本页用一个职业培训案例展示 CATE
+      的核心思想：森林用很多棵因果树寻找相似人群，并在局部比较处理组和对照组的结果差异。
+    </p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="card">
+    <span class="tag">核心问题</span>
+    <p>
+      传统平均处理效应 ATE 只给一个总体数字。因果森林估计的是条件平均处理效应：
+    </p>
+    <div class="formula">τ(x) = E[Y(1) − Y(0) | X = x]</div>
+    <p>
+      这里的 x 可以是年龄、教育、基线收入、技能测试分数等个体特征。τ(x) 越大，说明这类个体从处理中获得的收益越高。
+    </p>
+    <div class="warn">
+      随机森林预测 Y；因果森林预测“处理效应”。它关心的是在相似特征的人中，接受处理与未接受处理的结果差异。
+    </div>
+  </section>
+
+  <section>
+    <h2>1. 一棵因果树如何思考？</h2>
+    <div class="grid">
+      <div class="card span5">
+        <p>
+          普通回归通常假设一个统一斜率；因果树会按特征切分样本，让每个叶子节点内部的人尽量相似。
+          在叶子节点里，它比较处理组和对照组的平均结果差：
+        </p>
+        <div class="formula">τ̂<sub>leaf</sub> = mean(Y | W = 1, leaf) − mean(Y | W = 0, leaf)</div>
+        <p>
+          因果森林就是很多棵这种树的平均。每棵树看一部分样本和一部分变量，因此能降低单棵树的偶然性。
+        </p>
+      </div>
+      <div class="card span7">
+        <canvas id="treeCanvas"></canvas>
+        <div class="caption">图 1：树按“技能分数”和“年龄”切分。不同叶子对应不同局部处理效应。</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>2. 模拟案例：职业培训对收入提升的异质性影响</h2>
+    <div class="grid">
+      <div class="card span7">
+        <p>
+          构造 240 个求职者。处理变量 W 表示是否参加数字技能培训；结果 Y 表示下一季度收入提升。
+          真实设定中，年轻、技能基础较高的人更能从培训中获益。
+        </p>
+        <div class="metric-row">
+          <div class="metric"><div class="label">样本量</div><div class="value blue" id="nMetric">240</div></div>
+          <div class="metric"><div class="label">真实 ATE</div><div class="value green" id="ateMetric">--</div></div>
+          <div class="metric"><div class="label">最高 CATE 组</div><div class="value orange" id="highMetric">--</div></div>
+          <div class="metric"><div class="label">最低 CATE 组</div><div class="value red" id="lowMetric">--</div></div>
+        </div>
+        <div class="controls">
+          <button type="button" id="rerun">重新生成数据</button>
+          <label for="noise">结果噪声</label>
+          <input id="noise" type="range" min="0.4" max="2.4" step="0.2" value="1.2">
+          <span id="noiseValue">1.2</span>
+        </div>
+      </div>
+      <div class="card span5">
+        <div class="tablewrap">
+          <table id="sampleTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>年龄</th>
+                <th>技能</th>
+                <th>处理 W</th>
+                <th>收入提升 Y</th>
+                <th>真实 τ(x)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="caption">表 1：前 10 个观测。真实 τ(x) 只在模拟教学中可见，真实研究中需要估计。</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>3. 图表直觉：为什么要估计异质性？</h2>
+    <div class="grid">
+      <div class="card span6">
+        <canvas id="scatterCanvas"></canvas>
+        <div class="caption">图 2：每个点是一个个体。颜色表示真实处理效应 τ(x)，可以看到效应并不均匀。</div>
+      </div>
+      <div class="card span6">
+        <canvas id="cateCanvas"></canvas>
+        <div class="caption">图 3：把样本按因果森林估计的 CATE 分组，比较组内平均处理效应。</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>4. 因果森林的操作流程</h2>
+    <div class="card">
+      <div class="flow">
+        <div class="flow-step"><strong>1. 准备数据</strong>Y 是结果，W 是处理，X 是所有处理前特征。</div>
+        <div class="flow-step"><strong>2. 残差化</strong>先估计 E[Y|X] 与 E[W|X]，减少混杂。</div>
+        <div class="flow-step"><strong>3. 建很多树</strong>每棵树用局部样本切分 X，寻找效应差异大的区域。</div>
+        <div class="flow-step"><strong>4. 叶内比较</strong>在相似人群中比较 W=1 与 W=0 的结果差异。</div>
+        <div class="flow-step"><strong>5. 汇总树</strong>对很多树的局部估计取平均，得到 τ̂(x)。</div>
+      </div>
+      <div class="note">
+        在观测数据中，因果森林仍依赖“条件独立/无遗漏混杂”的识别假设：给定 X 后，处理分配近似可比。算法不能自动修复没有观测到的混杂变量。
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>5. 有数据的代码案例</h2>
+    <div class="card">
+      <p>
+        下面的代码生成与本页相同逻辑的模拟数据，并使用 Python 的 EconML 估计 CATE。若你使用 R，可以用
+        `grf::causal_forest` 完成同样流程。
+      </p>
+      <pre><code>import numpy as np
+import pandas as pd
+from econml.dml import CausalForestDML
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+from sklearn.model_selection import train_test_split
+
+rng = np.random.default_rng(42)
+n = 1200
+age = rng.uniform(20, 58, n)
+skill = rng.normal(0, 1, n)
+baseline_income = rng.normal(8, 2, n)
+
+X = pd.DataFrame({
+    "age": age,
+    "skill": skill,
+    "baseline_income": baseline_income
+})
+
+# 真实异质性：年轻且技能较高者，培训收益更高
+tau = 1.2 + 1.1 * (skill > 0) + 0.8 * (age < 35)
+
+# 处理分配倾向：高技能、低收入者更可能参加培训
+logit_p = -0.4 + 0.7 * skill - 0.15 * (baseline_income - 8)
+p = 1 / (1 + np.exp(-logit_p))
+W = rng.binomial(1, p, n)
+
+# 结果方程：Y = 基础趋势 + W * tau(X) + noise
+mu = 2.0 + 0.08 * (58 - age) + 0.7 * skill + 0.25 * baseline_income
+Y = mu + W * tau + rng.normal(0, 1.2, n)
+
+X_train, X_test, W_train, W_test, Y_train, Y_test = train_test_split(
+    X, W, Y, test_size=0.3, random_state=42
+)
+
+cf = CausalForestDML(
+    model_y=RandomForestRegressor(n_estimators=300, min_samples_leaf=10, random_state=1),
+    model_t=RandomForestClassifier(n_estimators=300, min_samples_leaf=10, random_state=2),
+    n_estimators=800,
+    min_samples_leaf=20,
+    random_state=42,
+    discrete_treatment=True
+)
+
+cf.fit(Y_train, W_train, X=X_train)
+cate_hat = cf.effect(X_test)
+
+result = X_test.copy()
+result["cate_hat"] = cate_hat
+print(result.sort_values("cate_hat", ascending=False).head())
+print("Estimated ATE:", cate_hat.mean())</code></pre>
+      <div class="warn">
+        报告结果时不要只给平均效应。更有信息量的是展示 CATE 分布、按 CATE 分组的收益、以及哪些特征推动了效应差异。
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Causal Forest Teaching Page · CATE · Heterogeneous Treatment Effects
+</footer>
+
+<script>
+let seed = 20260529;
+function rand() {
+  seed = (seed * 1664525 + 1013904223) >>> 0;
+  return seed / 4294967296;
+}
+function normal() {
+  const u = Math.max(rand(), 1e-9);
+  const v = Math.max(rand(), 1e-9);
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
+function setupCanvas(id) {
+  const canvas = document.getElementById(id);
+  const ctx = canvas.getContext("2d");
+  const ratio = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth;
+  const h = canvas.clientHeight;
+  canvas.width = Math.floor(w * ratio);
+  canvas.height = Math.floor(h * ratio);
+  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+  return { canvas, ctx, w, h };
+}
+function drawText(ctx, text, x, y, opts = {}) {
+  ctx.fillStyle = opts.color || "#1f2933";
+  ctx.font = `${opts.weight || 700} ${opts.size || 14}px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif`;
+  ctx.textAlign = opts.align || "center";
+  ctx.fillText(text, x, y);
+}
+function drawTree() {
+  const { ctx, w, h } = setupCanvas("treeCanvas");
+  ctx.lineWidth = 2;
+  const nodes = [
+    { x: w/2, y: 48, label: "全部样本", sub: "估计谁更受益" },
+    { x: w*0.27, y: 145, label: "技能 <= 0", sub: "低技能" },
+    { x: w*0.73, y: 145, label: "技能 > 0", sub: "高技能" },
+    { x: w*0.16, y: 250, label: "τ̂ = 1.1", sub: "收益较低" },
+    { x: w*0.38, y: 250, label: "τ̂ = 1.7", sub: "中等收益" },
+    { x: w*0.62, y: 250, label: "τ̂ = 2.4", sub: "高收益" },
+    { x: w*0.84, y: 250, label: "τ̂ = 3.0", sub: "最高收益" }
+  ];
+  const links = [[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]];
+  links.forEach(([a,b]) => {
+    ctx.beginPath();
+    ctx.moveTo(nodes[a].x, nodes[a].y + 28);
+    ctx.lineTo(nodes[b].x, nodes[b].y - 28);
+    ctx.strokeStyle = "#c6d0dc";
+    ctx.stroke();
+  });
+  nodes.forEach((n, i) => {
+    ctx.fillStyle = i < 3 ? "#eaf0f8" : (i === 6 ? "#eef8f1" : "#fff4e8");
+    ctx.strokeStyle = i < 3 ? "#315f9c" : "#b26b2b";
+    ctx.beginPath();
+    ctx.roundRect(n.x - 72, n.y - 28, 144, 56, 8);
+    ctx.fill();
+    ctx.stroke();
+    drawText(ctx, n.label, n.x, n.y - 3, { color: i < 3 ? "#315f9c" : "#1f2933", size: 14 });
+    drawText(ctx, n.sub, n.x, n.y + 17, { color: "#627080", size: 12, weight: 500 });
+  });
+}
+function trueTau(age, skill) {
+  return 1.0 + 1.05 * (skill > 0 ? 1 : 0) + 0.85 * (age < 35 ? 1 : 0) + 0.35 * Math.max(skill, 0);
+}
+function generateData() {
+  const noise = Number(document.getElementById("noise").value);
+  const data = [];
+  for (let i = 0; i < 240; i++) {
+    const age = 20 + 38 * rand();
+    const skill = normal();
+    const income0 = 7 + 2 * normal();
+    const tau = trueTau(age, skill);
+    const p = 1 / (1 + Math.exp(-(-0.25 + 0.65 * skill - 0.12 * (income0 - 7))));
+    const w = rand() < p ? 1 : 0;
+    const mu = 2 + 0.07 * (58 - age) + 0.65 * skill + 0.22 * income0;
+    const y = mu + w * tau + noise * normal();
+    data.push({ id: i + 1, age, skill, income0, w, y, tau });
+  }
+  return data;
+}
+function drawScatter(data) {
+  const { ctx, w, h } = setupCanvas("scatterCanvas");
+  const pad = 46;
+  ctx.strokeStyle = "#d8dee8";
+  ctx.beginPath();
+  ctx.moveTo(pad, h-pad);
+  ctx.lineTo(w-pad, h-pad);
+  ctx.lineTo(w-pad, pad);
+  ctx.stroke();
+  drawText(ctx, "年龄", w/2, h - 12, { color: "#627080", size: 12 });
+  drawText(ctx, "技能分数", 20, h/2, { color: "#627080", size: 12 });
+  data.forEach(d => {
+    const x = pad + (d.age - 20) / 38 * (w - 2*pad);
+    const y = h - pad - (Math.max(-2.5, Math.min(2.5, d.skill)) + 2.5) / 5 * (h - 2*pad);
+    const t = Math.min(1, (d.tau - 1) / 2.6);
+    ctx.fillStyle = `rgb(${Math.floor(166 + 40*t)}, ${Math.floor(69 + 70*t)}, ${Math.floor(69 - 20*t)})`;
+    ctx.globalAlpha = 0.75;
+    ctx.beginPath();
+    ctx.arc(x, y, d.w ? 4.5 : 3.2, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  drawText(ctx, "颜色越深：真实处理效应越高", w - 160, 26, { color: "#a64545", size: 12 });
+}
+function groupStats(data) {
+  const sorted = [...data].sort((a,b) => a.tau - b.tau);
+  const names = ["低 CATE", "中低 CATE", "中高 CATE", "高 CATE"];
+  return names.map((name, i) => {
+    const chunk = sorted.slice(i * 60, (i+1) * 60);
+    const treated = chunk.filter(d => d.w === 1);
+    const control = chunk.filter(d => d.w === 0);
+    const diff = avg(treated.map(d => d.y)) - avg(control.map(d => d.y));
+    return { name, tau: avg(chunk.map(d => d.tau)), diff, n: chunk.length };
+  });
+}
+function avg(xs) { return xs.reduce((a,b) => a+b, 0) / xs.length; }
+function drawBars(groups) {
+  const { ctx, w, h } = setupCanvas("cateCanvas");
+  const pad = 48;
+  const maxv = Math.max(...groups.map(g => Math.max(g.tau, g.diff))) + 0.7;
+  ctx.strokeStyle = "#d8dee8";
+  ctx.beginPath();
+  ctx.moveTo(pad, h-pad);
+  ctx.lineTo(w-pad, h-pad);
+  ctx.stroke();
+  const bw = (w - 2*pad) / groups.length;
+  groups.forEach((g, i) => {
+    const x = pad + i*bw + bw*0.20;
+    const ht1 = g.tau / maxv * (h - 2*pad);
+    const ht2 = Math.max(0, g.diff) / maxv * (h - 2*pad);
+    ctx.fillStyle = "#2f7d4f";
+    ctx.fillRect(x, h-pad-ht1, bw*0.22, ht1);
+    ctx.fillStyle = "#315f9c";
+    ctx.fillRect(x + bw*0.28, h-pad-ht2, bw*0.22, ht2);
+    drawText(ctx, g.name, pad + i*bw + bw/2, h - 18, { color: "#627080", size: 12 });
+    drawText(ctx, g.tau.toFixed(1), x + bw*0.11, h-pad-ht1-8, { color: "#2f7d4f", size: 12 });
+  });
+  drawText(ctx, "绿色：真实平均 τ(x)；蓝色：组内处理-对照均值差", w/2, 24, { color: "#627080", size: 12 });
+}
+function fillTable(data) {
+  const tbody = document.querySelector("#sampleTable tbody");
+  tbody.innerHTML = "";
+  data.slice(0, 10).forEach(d => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${d.id}</td><td>${d.age.toFixed(1)}</td><td>${d.skill.toFixed(2)}</td><td>${d.w}</td><td>${d.y.toFixed(2)}</td><td>${d.tau.toFixed(2)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+function render() {
+  document.getElementById("noiseValue").textContent = Number(document.getElementById("noise").value).toFixed(1);
+  const data = generateData();
+  const groups = groupStats(data);
+  fillTable(data);
+  drawTree();
+  drawScatter(data);
+  drawBars(groups);
+  document.getElementById("ateMetric").textContent = avg(data.map(d => d.tau)).toFixed(2);
+  document.getElementById("highMetric").textContent = groups[3].tau.toFixed(2);
+  document.getElementById("lowMetric").textContent = groups[0].tau.toFixed(2);
+}
+if (!CanvasRenderingContext2D.prototype.roundRect) {
+  CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+    this.moveTo(x + r, y);
+    this.arcTo(x + w, y, x + w, y + h, r);
+    this.arcTo(x + w, y + h, x, y + h, r);
+    this.arcTo(x, y + h, x, y, r);
+    this.arcTo(x, y, x + w, y, r);
+    return this;
+  };
+}
+document.getElementById("rerun").addEventListener("click", () => { seed = Math.floor(Date.now() % 4294967296); render(); });
+document.getElementById("noise").addEventListener("input", render);
+window.addEventListener("resize", render);
+render();
+</script>
+</body>
+</html>
