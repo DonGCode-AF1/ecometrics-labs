@@ -253,14 +253,21 @@
         </a>
 
         <!-- 卡片 8: Course Lecture Notes -->
-        <a href="labs/solow-growth/L6_Algorithms_StructuralEstimation.html" class="lab-card">
+        <div class="lab-card">
             <div>
                 <div class="lab-meta">Course Lecture Notes</div>
                 <h3 class="lab-name">L6 算法与结构估计 (原版讲义)</h3>
-                <p class="lab-desc">免配置 Jupyter 运行环境，直接在线交互式浏览完整课程讲义与 Python 代码，涵盖方程求解、牛顿法、梯度下降、数值积分微分以及 MLE/GMM/SMM 结构估计基础。</p>
+                <p class="lab-desc">免配置 Jupyter 运行环境，直接在线浏览讲义与代码；或通过 Google Colab 在云端一键执行和修改代码，零基础即可上手运行。</p>
             </div>
-            <div class="lab-action">查看讲义 ➔</div>
-        </a>
+            <div style="display: flex; gap: 10px; margin-top: 1rem; width: 100%;">
+                <a href="labs/solow-growth/L6_Algorithms_StructuralEstimation.html" style="flex: 1; text-align: center; text-decoration: none; padding: 0.6rem; font-size: 0.85rem; border-radius: 6px; background: rgba(78, 168, 222, 0.1); border: 1px solid var(--accent-blue); color: var(--accent-blue); font-weight: 500; transition: all 0.3s;" onmouseover="this.style.background='var(--accent-blue)'; this.style.color='#0b0c10';" onmouseout="this.style.background='rgba(78, 168, 222, 0.1)'; this.style.color='var(--accent-blue)';">
+                    📖 在线浏览 (HTML)
+                </a>
+                <a href="https://colab.research.google.com/github/DonGCode-AF1/ecometrics-labs/blob/master/labs/solow-growth/L6_Algorithms_StructuralEstimation.ipynb" target="_blank" style="flex: 1; text-align: center; text-decoration: none; padding: 0.6rem; font-size: 0.85rem; border-radius: 6px; background: rgba(197, 160, 89, 0.1); border: 1px solid var(--accent-gold); color: var(--accent-gold); font-weight: 500; transition: all 0.3s;" onmouseover="this.style.background='var(--accent-gold)'; this.style.color='#0b0c10';" onmouseout="this.style.background='rgba(197, 160, 89, 0.1)'; this.style.color='var(--accent-gold)';">
+                    🚀 云端运行 (Colab)
+                </a>
+            </div>
+        </div>
 
         <!-- Card 9: Neyman Orthogonality / DML -->
         <a href="labs/neyman-orthogonality-dml/neyman_dml_dashboard.html" class="lab-card">
