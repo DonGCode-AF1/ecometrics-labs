@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>结构估计基础：四种估计准则的直观理解</title>
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --paper: #ffffff;
+      --ink: #17202a;
+      --muted: #637083;
+      --line: #d9e0ea;
+      --blue: #2458a6;
+      --green: #1d7f65;
+      --gold: #a76d15;
+      --red: #a33a3a;
+      --code: #102033;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+    }
+
+    header {
+      background: linear-gradient(135deg, #102033 0%, #2458a6 62%, #1d7f65 100%);
+      color: white;
+      padding: 56px 24px 42px;
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      font-size: 14px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0.82;
+    }
+
+    h1 {
+      max-width: 900px;
+      margin: 0;
+      font-size: clamp(34px, 5vw, 58px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      max-width: 880px;
+      margin: 22px 0 0;
+      font-size: 19px;
+      opacity: 0.92;
+    }
+
+    main {
+      display: grid;
+      grid-template-columns: 250px minmax(0, 1fr);
+      gap: 28px;
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 24px 64px;
+    }
+
+    nav {
+      position: sticky;
+      top: 18px;
+      align-self: start;
+      padding: 18px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    nav strong {
+      display: block;
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+
+    nav a {
+      display: block;
+      padding: 7px 0;
+      color: var(--blue);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    section, .intro {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 26px;
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 20px;
+    }
+
+    p { margin: 10px 0; }
+
+    .source {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    .mini {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #fbfcff;
+    }
+
+    .mini strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--blue);
+    }
+
+    .formula {
+      overflow-x: auto;
+      padding: 15px 16px;
+      margin: 14px 0;
+      border-left: 4px solid var(--blue);
+      background: #eef4ff;
+      border-radius: 6px;
+      font-family: "Consolas", "SFMono-Regular", monospace;
+      white-space: nowrap;
+    }
+
+    .intuition {
+      display: grid;
+      grid-template-columns: 150px minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+      padding: 15px;
+      margin: 16px 0;
+      border-radius: 8px;
+      background: #f9fbf7;
+      border: 1px solid #dbe8d1;
+    }
+
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    pre {
+      margin: 14px 0 0;
+      overflow: auto;
+      padding: 18px;
+      border-radius: 8px;
+      background: var(--code);
+      color: #e8f0ff;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+
+    code {
+      font-family: "Consolas", "SFMono-Regular", monospace;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 3px 8px;
+      margin-right: 6px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: white;
+      background: var(--blue);
+    }
+
+    .tag.green { background: var(--green); }
+    .tag.gold { background: var(--gold); }
+    .tag.red { background: var(--red); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      font-size: 15px;
+    }
+
+    th, td {
+      padding: 11px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: #334155;
+      background: #f3f6fa;
+    }
+
+    .note {
+      padding: 14px 16px;
+      border-radius: 8px;
+      background: #fff8e8;
+      border: 1px solid #eed9a9;
+    }
+
+    .visual {
+      margin: 18px 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcff;
+    }
+
+    .visual h3 {
+      margin-top: 0;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+      margin-top: 14px;
+    }
+
+    .step {
+      min-height: 86px;
+      padding: 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .step strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--blue);
+      font-size: 15px;
+    }
+
+    .chart-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+      gap: 18px;
+      align-items: center;
+    }
+
+    .caption {
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .axis-label {
+      fill: #536173;
+      font-size: 10px;
+      font-family: "Segoe UI", "Noto Sans SC", sans-serif;
+    }
+
+    .decision {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .decision div {
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: white;
+    }
+
+    .decision strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--blue);
+    }
+
+    footer {
+      max-width: 1180px;
+      margin: 0 auto 36px;
+      padding: 0 24px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    @media (max-width: 860px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      nav {
+        position: static;
+      }
+
+      .grid, .intuition {
+        grid-template-columns: 1fr;
+      }
+
+      .flow, .chart-grid, .decision {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <p class="eyebrow">Week 6 · Structural Estimation Foundations</p>
+      <h1>结构估计第三部分：NLS、MLE、GMM、SMM 的直观理解与代码案例</h1>
+      <p class="lead">这份网页扩展课件“估计准则”部分：每个方法都从一句话直觉、数学目标、适用场景、Python 小例子和常见陷阱展开。重点不是背公式，而是理解“模型和数据之间到底在比什么”。</p>
+    </div>
+  </header>
+
+  <main>
+    <nav aria-label="页面目录">
+      <strong>目录</strong>
+      <a href="#overview">总览</a>
+      <a href="#nls">NLS：拟合预测值</a>
+      <a href="#mle">MLE：最大化概率</a>
+      <a href="#gmm">GMM：匹配矩条件</a>
+      <a href="#smm">SMM：匹配模拟矩</a>
+      <a href="#compare">如何选择</a>
+    </nav>
+
+    <div>
+      <div class="intro" id="overview">
+        <h2>一张图看四种准则</h2>
+        <p class="source">基于课程页第三部分“估计准则”：NLS、MLE、GMM、SMM。原课件中 NLS 使用了引力模型作为结构例子；其他方法这里补充经典直观案例。</p>
+        <div class="grid">
+          <div class="mini">
+            <strong>NLS</strong>
+            让模型预测值尽量贴近观测值。适合模型直接给出条件均值的场景。
+          </div>
+          <div class="mini">
+            <strong>MLE</strong>
+            让实际观察到的数据，在模型设定下出现的概率最大。适合完整写出概率分布的场景。
+          </div>
+          <div class="mini">
+            <strong>GMM</strong>
+            不要求完整分布，只要求模型推出若干矩条件。适合有工具变量、正交条件或均衡条件的场景。
+          </div>
+          <div class="mini">
+            <strong>SMM</strong>
+            当理论矩无法解析计算时，先模拟模型，再让模拟数据的矩接近真实数据的矩。
+          </div>
+        </div>
+        <div class="visual">
+          <h3>共同逻辑：估计其实是在设计“距离”</h3>
+          <p>四个方法的差别，不在于都用了优化器，而在于它们把“模型错了多少”定义成了不同的距离。</p>
+          <div class="flow">
+            <div class="step"><strong>经济模型</strong>偏好、成本、约束、冲击</div>
+            <div class="step"><strong>给定参数</strong>尝试一组 theta</div>
+            <div class="step"><strong>模型预测</strong>均值、概率、矩或模拟数据</div>
+            <div class="step"><strong>数据比较</strong>误差、似然、矩差</div>
+            <div class="step"><strong>优化更新</strong>找到距离最小的 theta</div>
+          </div>
+        </div>
+      </div>
+
+      <section id="nls">
+        <h2><span class="tag">NLS</span>非线性最小二乘：让预测值贴近数据</h2>
+        <p><strong>一句话直觉：</strong>如果模型能告诉我们“给定参数时 y 应该是多少”，NLS 就寻找让预测误差平方和最小的参数。</p>
+        <div class="formula">theta_hat = argmin_theta sum_i [y_i - h(x_i; theta)]^2</div>
+        <div class="intuition">
+          <svg viewBox="0 0 160 105" role="img" aria-label="NLS 拟合曲线示意">
+            <rect width="160" height="105" fill="#ffffff"/>
+            <line x1="18" y1="88" x2="148" y2="88" stroke="#9aa6b2"/>
+            <line x1="18" y1="88" x2="18" y2="14" stroke="#9aa6b2"/>
+            <path d="M20 75 C45 52, 70 44, 95 28 S130 22, 148 18" fill="none" stroke="#2458a6" stroke-width="4"/>
+            <circle cx="32" cy="69" r="4" fill="#a33a3a"/>
+            <circle cx="56" cy="54" r="4" fill="#a33a3a"/>
+            <circle cx="83" cy="45" r="4" fill="#a33a3a"/>
+            <circle cx="110" cy="27" r="4" fill="#a33a3a"/>
+            <circle cx="137" cy="24" r="4" fill="#a33a3a"/>
+          </svg>
+          <div>
+            <strong>怎么看：</strong>红点是数据，蓝线是模型预测。NLS 惩罚的是每个点到预测曲线的垂直距离。若误差方差大致稳定、目标是拟合条件均值，它非常自然。
+          </div>
+        </div>
+        <h3>案例：简化引力模型估计贸易成本弹性</h3>
+        <p>课件中提到 Anderson-van Wincoop 引力模型。完整模型有多边阻力固定点；这里先用一个可直观运行的简化版本：贸易流随经济规模上升，随距离下降。</p>
+        <pre><code>import numpy as np
+from scipy.optimize import minimize
+
+rng = np.random.default_rng(42)
+n = 80
+gdp_i = rng.lognormal(10.0, 0.7, n)
+gdp_j = rng.lognormal(9.8, 0.8, n)
+dist = rng.lognormal(6.0, 0.5, n)
+
+# 真值：贸易流 = A * GDP_i^b1 * GDP_j^b2 * distance^(-tau) * noise
+true = np.array([1.2, 0.85, 0.90, 1.15])  # logA, b1, b2, tau
+log_trade = (
+    true[0]
+    + true[1] * np.log(gdp_i)
+    + true[2] * np.log(gdp_j)
+    - true[3] * np.log(dist)
+    + rng.normal(0, 0.25, n)
+)
+
+def predict(theta):
+    logA, b1, b2, tau = theta
+    return logA + b1*np.log(gdp_i) + b2*np.log(gdp_j) - tau*np.log(dist)
+
+def nls_objective(theta):
+    resid = log_trade - predict(theta)
+    return np.sum(resid**2)
+
+res = minimize(nls_objective, x0=np.array([0.0, 1.0, 1.0, 1.0]))
+print(res.x)
+# 解释：tau 越大，距离对贸易流的抑制越强。</code></pre>
+        <div class="visual">
+          <h3>代码输出怎么读：预测贸易流贴近真实贸易流</h3>
+          <div class="chart-grid">
+            <svg viewBox="0 0 360 230" role="img" aria-label="NLS 预测值与观测值散点图">
+              <rect x="0" y="0" width="360" height="230" fill="#ffffff"/>
+              <line x1="48" y1="188" x2="318" y2="188" stroke="#9aa6b2"/>
+              <line x1="48" y1="188" x2="48" y2="28" stroke="#9aa6b2"/>
+              <line x1="54" y1="180" x2="304" y2="42" stroke="#2458a6" stroke-width="3"/>
+              <circle cx="75" cy="170" r="4" fill="#a33a3a"/>
+              <circle cx="100" cy="153" r="4" fill="#a33a3a"/>
+              <circle cx="132" cy="143" r="4" fill="#a33a3a"/>
+              <circle cx="158" cy="119" r="4" fill="#a33a3a"/>
+              <circle cx="190" cy="103" r="4" fill="#a33a3a"/>
+              <circle cx="218" cy="90" r="4" fill="#a33a3a"/>
+              <circle cx="250" cy="78" r="4" fill="#a33a3a"/>
+              <circle cx="286" cy="54" r="4" fill="#a33a3a"/>
+              <text x="118" y="218" class="axis-label">模型预测 log_trade</text>
+              <text x="8" y="34" class="axis-label" transform="rotate(-90 14,34)">观测 log_trade</text>
+            </svg>
+            <div>
+              <p><strong>理想形态：</strong>红点越贴近蓝色 45 度线，说明模型预测越接近观测贸易流。</p>
+              <p><strong>经济解读：</strong>如果估计出的 <code>tau</code> 很大，图中远距离贸易对的预测值会被明显压低，表示距离或贸易成本对贸易流抑制更强。</p>
+            </div>
+          </div>
+        </div>
+        <p class="note"><strong>结构估计提醒：</strong>完整引力模型中，贸易流不仅受双边距离影响，还受多边阻力项影响；若这些价格指数由固定点决定，NLS 外层每试一个参数，内层可能都要解一次固定点。</p>
+      </section>
+
+      <section id="mle">
+        <h2><span class="tag green">MLE</span>最大似然：让观测数据最可能出现</h2>
+        <p><strong>一句话直觉：</strong>如果模型能写出每条数据出现的概率，MLE 就选择让整份样本“最像是从这个模型里生成出来”的参数。</p>
+        <div class="formula">theta_hat = argmax_theta sum_i log f(x_i | theta)</div>
+        <div class="intuition">
+          <svg viewBox="0 0 160 105" role="img" aria-label="MLE 概率密度示意">
+            <rect width="160" height="105" fill="#ffffff"/>
+            <line x1="18" y1="88" x2="148" y2="88" stroke="#9aa6b2"/>
+            <path d="M20 88 C50 88, 48 18, 83 18 C118 18, 112 88, 148 88" fill="#dff3eb" stroke="#1d7f65" stroke-width="4"/>
+            <circle cx="65" cy="45" r="4" fill="#a33a3a"/>
+            <circle cx="78" cy="28" r="4" fill="#a33a3a"/>
+            <circle cx="91" cy="34" r="4" fill="#a33a3a"/>
+          </svg>
+          <div>
+            <strong>怎么看：</strong>MLE 不是只看均值误差，而是看数据落在整个概率分布中的“合理程度”。分布假设错了，似然也会把你带偏。
+          </div>
+        </div>
+        <h3>案例：二元选择 Logit 估计价格敏感度</h3>
+        <p>消费者是否购买某产品。效用差为 beta0 + beta1 * price，购买概率是 sigmoid。MLE 选择最能解释 0/1 购买数据的参数。</p>
+        <pre><code>import numpy as np
+from scipy.optimize import minimize
+
+rng = np.random.default_rng(7)
+n = 500
+price = rng.uniform(1.0, 5.0, n)
+beta_true = np.array([2.0, -0.8])
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+p_buy = sigmoid(beta_true[0] + beta_true[1] * price)
+y = rng.binomial(1, p_buy)
+
+def neg_log_likelihood(beta):
+    p = sigmoid(beta[0] + beta[1] * price)
+    p = np.clip(p, 1e-9, 1 - 1e-9)
+    return -np.sum(y*np.log(p) + (1-y)*np.log(1-p))
+
+res = minimize(neg_log_likelihood, x0=np.array([0.0, 0.0]))
+print(res.x)
+# beta1 通常为负：价格越高，购买概率越低。</code></pre>
+        <div class="visual">
+          <h3>代码输出怎么读：价格升高，购买概率下降</h3>
+          <div class="chart-grid">
+            <svg viewBox="0 0 360 230" role="img" aria-label="MLE Logit 购买概率曲线">
+              <rect width="360" height="230" fill="#ffffff"/>
+              <line x1="48" y1="188" x2="318" y2="188" stroke="#9aa6b2"/>
+              <line x1="48" y1="188" x2="48" y2="28" stroke="#9aa6b2"/>
+              <path d="M55 48 C95 52, 112 68, 142 98 S210 160, 310 180" fill="none" stroke="#1d7f65" stroke-width="4"/>
+              <circle cx="68" cy="54" r="3.5" fill="#a33a3a"/>
+              <circle cx="104" cy="70" r="3.5" fill="#a33a3a"/>
+              <circle cx="148" cy="105" r="3.5" fill="#a33a3a"/>
+              <circle cx="214" cy="160" r="3.5" fill="#a33a3a"/>
+              <circle cx="280" cy="177" r="3.5" fill="#a33a3a"/>
+              <text x="150" y="218" class="axis-label">价格</text>
+              <text x="7" y="40" class="axis-label" transform="rotate(-90 13,40)">购买概率</text>
+            </svg>
+            <div>
+              <p><strong>理想形态：</strong>绿色曲线是模型估计的购买概率，红点可以理解为不同价格区间的实际购买率。</p>
+              <p><strong>MLE 的“拟合”不是画线：</strong>它是在最大化每个 0/1 选择被模型解释出来的概率。曲线位置和斜率都由似然函数决定。</p>
+            </div>
+          </div>
+        </div>
+        <p class="note"><strong>适用场景：</strong>离散选择、拍卖出价分布、持续时间模型、需求模型中的选择概率。关键是你愿意相信概率分布或误差结构。</p>
+      </section>
+
+      <section id="gmm">
+        <h2><span class="tag gold">GMM</span>广义矩估计：让模型矩接近数据矩</h2>
+        <p><strong>一句话直觉：</strong>如果模型不方便写完整概率，但能推出“某些平均关系应该等于 0”，GMM 就让这些平均偏差尽量小。</p>
+        <div class="formula">theta_hat = argmin_theta g_bar(theta)' W g_bar(theta), where g_bar(theta)=N^-1 sum_i g(Z_i, theta)</div>
+        <div class="intuition">
+          <svg viewBox="0 0 160 105" role="img" aria-label="GMM 矩匹配示意">
+            <rect width="160" height="105" fill="#ffffff"/>
+            <line x1="24" y1="85" x2="140" y2="85" stroke="#9aa6b2"/>
+            <line x1="24" y1="85" x2="24" y2="15" stroke="#9aa6b2"/>
+            <rect x="42" y="45" width="20" height="40" fill="#a76d15"/>
+            <rect x="70" y="35" width="20" height="50" fill="#a76d15"/>
+            <rect x="98" y="52" width="20" height="33" fill="#a76d15"/>
+            <line x1="30" y1="42" x2="135" y2="42" stroke="#2458a6" stroke-width="3" stroke-dasharray="5 4"/>
+          </svg>
+          <div>
+            <strong>怎么看：</strong>GMM 比较的是样本中的平均正交关系。比如工具变量 z 应该和结构误差 xi 无关，所以 E[z * xi(theta)] = 0。
+          </div>
+        </div>
+        <h3>案例：用工具变量矩条件估计价格系数</h3>
+        <p>需求里价格可能和未观测质量相关，OLS 会偏。若成本冲击 z 影响价格但不直接影响需求误差，可以用矩条件 E[z * residual] = 0。</p>
+        <pre><code>import numpy as np
+from scipy.optimize import minimize
+
+rng = np.random.default_rng(11)
+n = 800
+x = rng.normal(size=n)
+z = rng.normal(size=n)       # 工具变量：成本或距离冲击
+xi = rng.normal(size=n)      # 需求冲击
+
+# 价格受工具变量 z 和需求冲击 xi 共同影响，因此 price 内生
+price = 1.0 + 0.7*z + 0.6*xi + rng.normal(scale=0.3, size=n)
+y = 1.5 + 0.9*x - 1.2*price + xi
+
+Z = np.column_stack([np.ones(n), x, z])
+
+def moments(theta):
+    b0, bx, alpha = theta
+    resid = y - (b0 + bx*x - alpha*price)
+    return (Z * resid[:, None]).mean(axis=0)
+
+W = np.eye(3)
+
+def gmm_objective(theta):
+    g = moments(theta)
+    return g @ W @ g
+
+res = minimize(gmm_objective, x0=np.array([0.0, 0.0, 0.5]))
+print(res.x)
+# alpha 是价格敏感度；矩条件要求工具变量与结构残差正交。</code></pre>
+        <div class="visual">
+          <h3>代码输出怎么读：矩条件被压到接近 0</h3>
+          <div class="chart-grid">
+            <svg viewBox="0 0 360 230" role="img" aria-label="GMM 矩条件柱状图">
+              <rect width="360" height="230" fill="#ffffff"/>
+              <line x1="48" y1="116" x2="318" y2="116" stroke="#2458a6" stroke-width="3" stroke-dasharray="6 5"/>
+              <line x1="48" y1="188" x2="318" y2="188" stroke="#9aa6b2"/>
+              <line x1="48" y1="38" x2="48" y2="188" stroke="#9aa6b2"/>
+              <rect x="78" y="72" width="42" height="44" fill="#d7a74d"/>
+              <rect x="158" y="108" width="42" height="8" fill="#d7a74d"/>
+              <rect x="238" y="116" width="42" height="22" fill="#d7a74d"/>
+              <text x="77" y="207" class="axis-label">E[resid]</text>
+              <text x="151" y="207" class="axis-label">E[x*resid]</text>
+              <text x="231" y="207" class="axis-label">E[z*resid]</text>
+              <text x="8" y="50" class="axis-label" transform="rotate(-90 14,50)">样本矩</text>
+            </svg>
+            <div>
+              <p><strong>理想形态：</strong>估计后，每个柱子都应靠近蓝色 0 线。柱子越高，说明对应矩条件越没被满足。</p>
+              <p><strong>经济解读：</strong><code>E[z * residual] = 0</code> 是核心。它表示工具变量 z 中剩下的变化，不能系统性预测结构误差。</p>
+            </div>
+          </div>
+        </div>
+        <p class="note"><strong>实践重点：</strong>GMM 的识别来自矩条件，不来自优化器。工具变量弱、矩条件错、权重矩阵乱用，都会让漂亮的数值结果失去经济意义。</p>
+      </section>
+
+      <section id="smm">
+        <h2><span class="tag red">SMM</span>模拟矩估计：当矩只能模拟出来</h2>
+        <p><strong>一句话直觉：</strong>有些模型太复杂，理论矩没有封闭形式。SMM 就给定参数模拟一批“模型世界”的数据，再比较模拟世界和真实世界的统计特征。</p>
+        <div class="formula">theta_hat = argmin_theta [m_sim(theta)-m_data]' W [m_sim(theta)-m_data]</div>
+        <div class="intuition">
+          <svg viewBox="0 0 160 105" role="img" aria-label="SMM 模拟矩示意">
+            <rect width="160" height="105" fill="#ffffff"/>
+            <circle cx="43" cy="35" r="19" fill="#f5d7d7" stroke="#a33a3a" stroke-width="3"/>
+            <circle cx="43" cy="72" r="10" fill="#f5d7d7" stroke="#a33a3a" stroke-width="3"/>
+            <circle cx="112" cy="35" r="16" fill="#dfeaff" stroke="#2458a6" stroke-width="3"/>
+            <circle cx="112" cy="72" r="13" fill="#dfeaff" stroke="#2458a6" stroke-width="3"/>
+            <line x1="64" y1="52" x2="91" y2="52" stroke="#9aa6b2" stroke-width="3" marker-end="url(#arrow)"/>
+            <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9aa6b2"/></marker></defs>
+          </svg>
+          <div>
+            <strong>怎么看：</strong>左边是真实数据的矩，右边是模拟数据的矩。SMM 调参数，直到模拟出来的均值、方差、进入率、选择份额等尽量像真实世界。
+          </div>
+        </div>
+        <h3>案例：简化进入模型估计进入成本</h3>
+        <p>一个市场是否有企业进入，取决于利润冲击是否超过进入成本。真实数据里只看到进入率和进入市场的平均利润，用 SMM 匹配这两个矩。</p>
+        <pre><code>import numpy as np
+from scipy.optimize import minimize
+
+rng = np.random.default_rng(21)
+n_market = 1000
+true_cost = 1.1
+profit_shock = rng.normal(loc=0.8, scale=1.0, size=n_market)
+entered = profit_shock > true_cost
+observed_profit = profit_shock[entered] - true_cost
+
+m_data = np.array([
+    entered.mean(),
+    observed_profit.mean()
+])
+
+# 固定随机数，让目标函数更平滑
+fixed_draws = rng.normal(loc=0.8, scale=1.0, size=5000)
+
+def simulate_moments(cost):
+    sim_entered = fixed_draws > cost
+    sim_profit = fixed_draws[sim_entered] - cost
+    return np.array([
+        sim_entered.mean(),
+        sim_profit.mean()
+    ])
+
+def smm_objective(theta):
+    cost = theta[0]
+    diff = simulate_moments(cost) - m_data
+    return diff @ diff
+
+res = minimize(smm_objective, x0=np.array([0.5]), bounds=[(0.0, 3.0)])
+print(res.x)
+# cost 越高，模拟进入率越低；SMM 用进入率和利润矩反推进入成本。</code></pre>
+        <div class="visual">
+          <h3>代码输出怎么读：真实矩和模拟矩逐步对齐</h3>
+          <div class="chart-grid">
+            <svg viewBox="0 0 360 230" role="img" aria-label="SMM 真实矩和模拟矩对比图">
+              <rect width="360" height="230" fill="#ffffff"/>
+              <line x1="48" y1="188" x2="318" y2="188" stroke="#9aa6b2"/>
+              <line x1="48" y1="38" x2="48" y2="188" stroke="#9aa6b2"/>
+              <rect x="90" y="84" width="34" height="104" fill="#a33a3a"/>
+              <rect x="128" y="92" width="34" height="96" fill="#2458a6"/>
+              <rect x="216" y="120" width="34" height="68" fill="#a33a3a"/>
+              <rect x="254" y="124" width="34" height="64" fill="#2458a6"/>
+              <text x="88" y="207" class="axis-label">进入率</text>
+              <text x="211" y="207" class="axis-label">进入后利润</text>
+              <circle cx="250" cy="48" r="5" fill="#a33a3a"/><text x="262" y="52" class="axis-label">真实数据矩</text>
+              <circle cx="250" cy="68" r="5" fill="#2458a6"/><text x="262" y="72" class="axis-label">模拟模型矩</text>
+            </svg>
+            <div>
+              <p><strong>理想形态：</strong>同一组矩下，红柱和蓝柱越接近，说明当前参数模拟出的市场越像真实市场。</p>
+              <p><strong>为什么有用：</strong>进入博弈、动态选择、随机系数需求这类模型常常难以写出解析矩，但可以模拟很多次。</p>
+            </div>
+          </div>
+        </div>
+        <p class="note"><strong>课件提醒的延伸：</strong>如果每次目标函数评估都重新抽样，目标函数会抖动。实践中常固定随机抽样，使优化器看到的目标函数更平滑。</p>
+      </section>
+
+      <section id="compare">
+        <h2>什么时候用哪个？</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>方法</th>
+              <th>你需要模型给出什么</th>
+              <th>典型场景</th>
+              <th>主要风险</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>NLS</td>
+              <td>条件均值或预测方程</td>
+              <td>非线性需求、引力模型、增长曲线</td>
+              <td>内生性、异方差、局部最优</td>
+            </tr>
+            <tr>
+              <td>MLE</td>
+              <td>完整概率密度或选择概率</td>
+              <td>Logit/Probit、拍卖、持续时间模型</td>
+              <td>分布假设错误、数值下溢、极端概率</td>
+            </tr>
+            <tr>
+              <td>GMM</td>
+              <td>矩条件或正交条件</td>
+              <td>工具变量、Euler 方程、资产定价矩</td>
+              <td>弱识别、错误矩条件、权重矩阵选择</td>
+            </tr>
+            <tr>
+              <td>SMM</td>
+              <td>可模拟的数据生成过程</td>
+              <td>进入博弈、动态选择、随机系数需求</td>
+              <td>模拟误差、计算成本、矩选择不充分</td>
+            </tr>
+          </tbody>
+        </table>
+        <h3>共同骨架</h3>
+        <p>这四个方法都在做同一件事：定义一个“模型错了多少”的距离，然后找让距离最小的参数。真正困难的地方往往不是写优化器，而是选择能识别参数、能承受反事实解释的距离。</p>
+        <div class="visual">
+          <h3>方法选择决策卡</h3>
+          <div class="decision">
+            <div>
+              <strong>能写出预测均值？</strong>
+              优先考虑 NLS。先看残差图，再担心内生性和异方差。
+            </div>
+            <div>
+              <strong>能写出完整概率？</strong>
+              优先考虑 MLE。检查分布假设、极端概率和数值稳定性。
+            </div>
+            <div>
+              <strong>只有正交条件？</strong>
+              优先考虑 GMM。重点审查矩条件是否真的识别参数。
+            </div>
+            <div>
+              <strong>只能模拟模型？</strong>
+              优先考虑 SMM。固定随机数，选择能识别参数的矩。
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    参考来源：陈志远，《经济与商务实证研究方法》第 6 周课件“结构估计基础——模型、识别、仿真与数值方法”，第三部分“估计准则”。本页为扩展讲解与教学示例。
+  </footer>
+</body>
+</html>
