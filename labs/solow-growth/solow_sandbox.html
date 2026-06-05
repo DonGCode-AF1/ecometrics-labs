@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>索洛增长模型与数值优化交互式沙盒</title>
+    <!-- Fonts & MathJax -->
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0c10;
+            --card-bg: rgba(20, 22, 30, 0.75);
+            --border-color: rgba(197, 160, 89, 0.25);
+            --border-hover: rgba(197, 160, 89, 0.6);
+            --text-primary: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --accent-gold: #c5a059;
+            --accent-gold-rgb: 197, 160, 89;
+            --accent-teal: #00adb5;
+            --accent-pink: #ff2e63;
+            --font-main: 'Noto Sans SC', sans-serif;
+            --font-title: 'Cinzel', serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 173, 181, 0.04) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(197, 160, 89, 0.04) 0%, transparent 40%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Nav Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .logo-section h1 {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            color: var(--accent-gold);
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(197, 160, 89, 0.2);
+        }
+
+        .logo-section p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: var(--accent-gold);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px rgba(197, 160, 89, 0.4);
+        }
+
+        /* Layout Grid */
+        .grid-main {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-main {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-title {
+            font-size: 1.15rem;
+            color: var(--accent-gold);
+            margin-bottom: 1.2rem;
+            border-left: 3px solid var(--accent-gold);
+            padding-left: 0.6rem;
+            font-weight: 700;
+        }
+
+        /* Sliders & Controls */
+        .control-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.4rem;
+        }
+
+        .control-value {
+            color: var(--accent-teal);
+            font-weight: 700;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+            transition: background 0.3s;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(197, 160, 89, 0.6);
+            transition: transform 0.1s;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+        }
+
+        /* Selector / Button Group */
+        .select-group {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 1.25rem;
+        }
+
+        .select-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .select-btn.active {
+            background: rgba(197, 160, 89, 0.2);
+            color: var(--accent-gold);
+            font-weight: 500;
+        }
+
+        /* Metrics panel */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 0.8rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metric-title {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.2rem;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent-teal);
+        }
+
+        .metric-value.highlight {
+            color: var(--accent-gold);
+        }
+
+        /* Tabs and Main Content */
+        .tabs-header {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .tab-link:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-link.active {
+            color: var(--accent-gold);
+            background: rgba(197, 160, 89, 0.15);
+            font-weight: 700;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Visualization Layouts */
+        .chart-container {
+            position: relative;
+            height: 380px;
+            width: 100%;
+            margin-bottom: 1.5rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 0.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        .chart-double {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .chart-double {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Math & Formulas display */
+        .math-card {
+            background: rgba(197, 160, 89, 0.03);
+            border: 1px solid rgba(197, 160, 89, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            overflow-x: auto;
+        }
+
+        .interactive-math {
+            font-size: 1.1rem;
+            text-align: center;
+            margin: 0.5rem 0;
+            color: var(--accent-teal);
+        }
+
+        /* Simulation Controls in the Main Panel */
+        .sim-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            background: rgba(197, 160, 89, 0.1);
+            border: 1px solid var(--accent-gold);
+            color: var(--accent-gold);
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--accent-gold);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px rgba(197, 160, 89, 0.3);
+        }
+
+        .btn-teal {
+            background: rgba(0, 173, 181, 0.1);
+            border: 1px solid var(--accent-teal);
+            color: var(--accent-teal);
+        }
+
+        .btn-teal:hover {
+            background: var(--accent-teal);
+            color: var(--bg-color);
+            box-shadow: 0 0 15px rgba(0, 173, 181, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="logo-section">
+            <h1>Solow Growth & Numerical Optimization Sandbox</h1>
+            <p>索洛增长模型稳态求解与数值优化算法（GD/Newton）交互式实验室</p>
+        </div>
+        <a href="../../index.html" class="back-btn" id="navBackBtn">返回实验室导航</a>
+    </header>
+
+    <div class="grid-main">
+        <!-- Sidebar Controls -->
+        <div class="card">
+            <h2 class="card-title">模型与控制参数</h2>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-title">解析稳态 \(k^*\)</div>
+                    <div class="metric-value highlight" id="valKStar">--</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-title">收敛数值 \(k_{\text{converged}}\)</div>
+                    <div class="metric-value" id="valKConverged">--</div>
+                </div>
+            </div>
+
+            <!-- Parameters sliders -->
+            <div class="control-group">
+                <div class="control-label">
+                    <span>生产率参数 \(A\) (TFP)</span>
+                    <span class="control-value" id="lblA">2.00</span>
+                </div>
+                <input type="range" id="paramA" class="slider" min="0.5" max="5.0" step="0.1" value="2.0">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>储蓄率 \(s\)</span>
+                    <span class="control-value" id="lblS">0.30</span>
+                </div>
+                <input type="range" id="paramS" class="slider" min="0.05" max="0.90" step="0.01" value="0.30">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>资本产出弹性 \(\alpha\)</span>
+                    <span class="control-value" id="lblAlpha">0.30</span>
+                </div>
+                <input type="range" id="paramAlpha" class="slider" min="0.05" max="0.95" step="0.01" value="0.30">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>折旧率 \(\delta\)</span>
+                    <span class="control-value" id="lblDelta">0.40</span>
+                </div>
+                <input type="range" id="paramDelta" class="slider" min="0.05" max="0.95" step="0.01" value="0.40">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>初始人均资本 \(k_0\)</span>
+                    <span class="control-value" id="lblK0">0.25</span>
+                </div>
+                <input type="range" id="paramK0" class="slider" min="0.05" max="6.0" step="0.05" value="0.25">
+            </div>
+
+            <h2 class="card-title" style="margin-top: 1.5rem;">数值求解器设置</h2>
+
+            <div class="control-group">
+                <label class="control-label">算法选择</label>
+                <div class="select-group" id="solverType">
+                    <button class="select-btn active" data-solver="gd" id="btnSolverGD">梯度下降法 (GD)</button>
+                    <button class="select-btn" data-solver="newton" id="btnSolverNewton">牛顿法 (Newton)</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>求解器初始猜测值 \(k_{\text{solve}, 0}\)</span>
+                    <span class="control-value" id="lblKGuess">1.50</span>
+                </div>
+                <input type="range" id="paramKGuess" class="slider" min="0.05" max="6.0" step="0.05" value="1.50">
+            </div>
+
+            <div class="control-group" id="learningRateContainer">
+                <div class="control-label">
+                    <span>学习率 (步长) \(\eta\)</span>
+                    <span class="control-value" id="lblEta">0.20</span>
+                </div>
+                <input type="range" id="paramEta" class="slider" min="0.01" max="1.50" step="0.01" value="0.20">
+            </div>
+
+            <div class="sim-actions">
+                <button class="btn btn-teal" id="btnRunSolver">运行数值求解器</button>
+            </div>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="card">
+            <div class="tabs-header">
+                <div class="tab-link active" data-tab="tab-dynamics" id="tabDynamicsLink">资本积累与动态路径 (Cobweb)</div>
+                <div class="tab-link" data-tab="tab-solvers" id="tabSolversLink">求解器收敛与数值优化</div>
+            </div>
+
+            <!-- Tab 1: Dynamics -->
+            <div class="tab-content active" id="tab-dynamics">
+                <div class="math-card">
+                    <p><strong>索洛资本运动方程 (Law of Motion)</strong>：人均资本 \(k_{t+1}\) 迭代遵循以下映射：</p>
+                    $$k_{t+1} = g(k_t) \equiv s A k_t^\alpha + (1-\delta)k_t$$
+                    <p>唯一的稳态满足 \(g(k^*) = k^*\)，其理论解析解为：</p>
+                    <div class="interactive-math" id="formulaSteadyState">
+                        $$k^* = \left(\frac{sA}{\delta}\right)^{\frac{1}{1-\alpha}}$$
+                    </div>
+                </div>
+
+                <div class="chart-double">
+                    <div>
+                        <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--accent-gold);">资本积累映射与 45 度线相交 (Phase Diagram)</h4>
+                        <div class="chart-container">
+                            <canvas id="chartPhase"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--accent-teal);">资本序列的时间路径演化 (Time Path)</h4>
+                        <div class="chart-container">
+                            <canvas id="chartTimePath"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Solvers -->
+            <div class="tab-content" id="tab-solvers">
+                <div class="math-card">
+                    <p>我们欲求解稳态方程的根：\(f(k) \equiv g(k) - k = s A k^\alpha - \delta k = 0\)。或者说，我们通过最小化平方损失函数（Squared Loss）来进行梯度下降：</p>
+                    $$\min_k L(k) = \frac{1}{2} [f(k)]^2 = \frac{1}{2} (s A k^\alpha - \delta k)^2$$
+                    <p><strong>梯度下降更新规则</strong>：\(\nabla_k L(k) = f(k) \cdot f'(k) = (s A k^\alpha - \delta k)(s A \alpha k^{\alpha-1} - \delta)\)</p>
+                    $$k^{(i+1)} = k^{(i)} - \eta \nabla_k L(k^{(i)})$$
+                    <p><strong>牛顿法根求解更新规则</strong>（直接作用于 \(f(k)=0\)）：</p>
+                    $$k^{(i+1)} = k^{(i)} - \frac{f(k^{(i)})}{f'(k^{(i)})} = k^{(i)} - \frac{s A (k^{(i)})^\alpha - \delta k^{(i)}}{s A \alpha (k^{(i)})^{\alpha-1} - \delta}$$
+                </div>
+
+                <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr);">
+                    <div class="metric-card">
+                        <div class="metric-title">求解状态</div>
+                        <div class="metric-value" id="valSolverStatus" style="font-size: 1rem;">未运行</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">迭代次数</div>
+                        <div class="metric-value" id="valSolverIters">--</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">最终残差 |f(k)|</div>
+                        <div class="metric-value" id="valSolverResidual">--</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">用时</div>
+                        <div class="metric-value" id="valSolverTime">--</div>
+                    </div>
+                </div>
+
+                <div class="chart-double">
+                    <div>
+                        <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--accent-gold);">损失函数面与迭代轨迹 (Loss Surface & Path)</h4>
+                        <div class="chart-container">
+                            <canvas id="chartLossPath"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: var(--accent-pink);">残差收敛速率对数图 (Residual Convergence Log Plot)</h4>
+                        <div class="chart-container">
+                            <canvas id="chartResiduals"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // State Variables
+    let state = {
+        A: 2.0,
+        s: 0.3,
+        alpha: 0.3,
+        delta: 0.4,
+        k0: 0.25,
+        solver: 'gd', // 'gd' or 'newton'
+        kGuess: 1.5,
+        eta: 0.2,
+        activeTab: 'tab-dynamics',
+        
+        // Solver output data
+        solverPath: [],
+        solverLoss: [],
+        solverResidual: [],
+        solverTime: 0,
+        solverIters: 0,
+        solverConverged: false,
+        solverFinalVal: 0
+    };
+
+    // Chart Handles
+    let charts = {
+        phase: null,
+        timePath: null,
+        lossPath: null,
+        residuals: null
+    };
+
+    // Helper functions for Solow Model math
+    function g(k, A, s, alpha, delta) {
+        return s * A * Math.pow(k, alpha) + (1 - delta) * k;
+    }
+
+    function f(k, A, s, alpha, delta) {
+        return s * A * Math.pow(k, alpha) - delta * k;
+    }
+
+    function df(k, A, s, alpha, delta) {
+        return s * A * alpha * Math.pow(k, alpha - 1) - delta;
+    }
+
+    function loss(k, A, s, alpha, delta) {
+        let val = f(k, A, s, alpha, delta);
+        return 0.5 * val * val;
+    }
+
+    function grad_loss(k, A, s, alpha, delta) {
+        let valF = f(k, A, s, alpha, delta);
+        let valDF = df(k, A, s, alpha, delta);
+        return valF * valDF;
+    }
+
+    function calcExactSteadyState(A, s, alpha, delta) {
+        return Math.pow((s * A) / delta, 1 / (1 - alpha));
+    }
+
+    // Initialize UI values
+    function updateLabels() {
+        document.getElementById('lblA').textContent = state.A.toFixed(2);
+        document.getElementById('lblS').textContent = state.s.toFixed(2);
+        document.getElementById('lblAlpha').textContent = state.alpha.toFixed(2);
+        document.getElementById('lblDelta').textContent = state.delta.toFixed(2);
+        document.getElementById('lblK0').textContent = state.k0.toFixed(2);
+        document.getElementById('lblKGuess').textContent = state.kGuess.toFixed(2);
+        document.getElementById('lblEta').textContent = state.eta.toFixed(2);
+
+        let kstar = calcExactSteadyState(state.A, state.s, state.alpha, state.delta);
+        document.getElementById('valKStar').textContent = kstar.toFixed(4);
+    }
+
+    // Run Numerical Solver
+    function runSolverSimulation() {
+        let maxIter = 1000;
+        let tol = 1e-6;
+        let k = state.kGuess;
+        
+        let path = [k];
+        let residuals = [Math.abs(f(k, state.A, state.s, state.alpha, state.delta))];
+        let losses = [loss(k, state.A, state.s, state.alpha, state.delta)];
+        
+        let start = performance.now();
+        let iter = 0;
+        let converged = false;
+
+        while (iter < maxIter) {
+            let kNew;
+            if (state.solver === 'gd') {
+                let grad = grad_loss(k, state.A, state.s, state.alpha, state.delta);
+                kNew = k - state.eta * grad;
+            } else { // Newton
+                let valF = f(k, state.A, state.s, state.alpha, state.delta);
+                let valDF = df(k, state.A, state.s, state.alpha, state.delta);
+                if (Math.abs(valDF) < 1e-12) {
+                    break;
+                }
+                kNew = k - valF / valDF;
+            }
+
+            // Bound kNew to be positive to avoid NaN in pow
+            if (kNew <= 0 || isNaN(kNew)) {
+                kNew = 1e-4; 
+            }
+
+            path.push(kNew);
+            let res = Math.abs(f(kNew, state.A, state.s, state.alpha, state.delta));
+            residuals.push(res);
+            losses.push(loss(kNew, state.A, state.s, state.alpha, state.delta));
+
+            if (Math.abs(kNew - k) < tol || res < tol) {
+                converged = true;
+                k = kNew;
+                break;
+            }
+            k = kNew;
+            iter++;
+        }
+        let end = performance.now();
+
+        state.solverPath = path;
+        state.solverLoss = losses;
+        state.solverResidual = residuals;
+        state.solverTime = end - start;
+        state.solverIters = path.length - 1;
+        state.solverConverged = converged;
+        state.solverFinalVal = k;
+
+        // Update UI metrics
+        document.getElementById('valKConverged').textContent = k.toFixed(4);
+        document.getElementById('valSolverStatus').textContent = converged ? "已收敛" : "未收敛";
+        document.getElementById('valSolverStatus').style.color = converged ? "var(--accent-teal)" : "var(--accent-pink)";
+        document.getElementById('valSolverIters').textContent = state.solverIters;
+        document.getElementById('valSolverResidual').textContent = residuals[residuals.length - 1].toExponential(3);
+        document.getElementById('valSolverTime').textContent = `${state.solverTime.toFixed(2)} ms`;
+    }
+
+    // Chart builders
+    function buildPhaseDiagram() {
+        let kstar = calcExactSteadyState(state.A, state.s, state.alpha, state.delta);
+        let maxK = Math.max(3.0, kstar * 1.5);
+        let kGrid = [];
+        let gGrid = [];
+        let diagGrid = [];
+        
+        let steps = 150;
+        for (let i = 0; i <= steps; i++) {
+            let k = (maxK / steps) * i;
+            kGrid.push(k);
+            gGrid.push(g(k, state.A, state.s, state.alpha, state.delta));
+            diagGrid.push(k);
+        }
+
+        // Cobweb mapping trajectory
+        let cobwebK = [];
+        let cobwebG = [];
+        let currentK = state.k0;
+        cobwebK.push(currentK);
+        cobwebG.push(0);
+
+        for (let i = 0; i < 20; i++) {
+            let nextK = g(currentK, state.A, state.s, state.alpha, state.delta);
+            // vertical line to curve
+            cobwebK.push(currentK);
+            cobwebG.push(nextK);
+            // horizontal line to 45 degree line
+            cobwebK.push(nextK);
+            cobwebG.push(nextK);
+            
+            if (Math.abs(nextK - currentK) < 1e-4) break;
+            currentK = nextK;
+        }
+
+        let datasets = [
+            {
+                label: '资本运动规律 g(k)',
+                data: kGrid.map((k, idx) => ({x: k, y: gGrid[idx]})),
+                borderColor: '#c5a059',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 0,
+                showLine: true
+            },
+            {
+                label: '45度线 (平衡状态)',
+                data: kGrid.map((k, idx) => ({x: k, y: diagGrid[idx]})),
+                borderColor: '#ffffff',
+                borderDash: [5, 5],
+                backgroundColor: 'transparent',
+                borderWidth: 1,
+                pointRadius: 0,
+                showLine: true
+            },
+            {
+                label: '稳态点 k*',
+                data: [{x: kstar, y: kstar}],
+                borderColor: '#00adb5',
+                backgroundColor: '#00adb5',
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                showLine: false
+            },
+            {
+                label: '积累轨迹 (Cobweb)',
+                data: cobwebK.map((k, idx) => ({x: k, y: cobwebG[idx]})),
+                borderColor: '#ff2e63',
+                backgroundColor: 'transparent',
+                borderWidth: 1.5,
+                pointRadius: 1,
+                showLine: true
+            }
+        ];
+
+        if (charts.phase) {
+            charts.phase.data.datasets = datasets;
+            charts.phase.options.scales.x.max = maxK;
+            charts.phase.options.scales.y.max = maxK;
+            charts.phase.update('none');
+        } else {
+            let ctx = document.getElementById('chartPhase').getContext('2d');
+            charts.phase = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: { display: true, text: '当前人均资本 kt', color: '#a1a1a6' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#a1a1a6' },
+                            min: 0,
+                            max: maxK
+                        },
+                        y: {
+                            type: 'linear',
+                            title: { display: true, text: '下期人均资本 kt+1', color: '#a1a1a6' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#a1a1a6' },
+                            min: 0,
+                            max: maxK
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#f5f5f7' } }
+                    }
+                }
+            });
+        }
+    }
+
+    function buildTimePathDiagram() {
+        let kstar = calcExactSteadyState(state.A, state.s, state.alpha, state.delta);
+        let timeSteps = 40;
+        let kPath = [];
+        let tLabels = [];
+        let steadyLabels = [];
+
+        let currentK = state.k0;
+        for (let t = 0; t <= timeSteps; t++) {
+            kPath.push(currentK);
+            tLabels.push(t);
+            steadyLabels.push(kstar);
+            currentK = g(currentK, state.A, state.s, state.alpha, state.delta);
+        }
+
+        let datasets = [
+            {
+                label: '人均资本演化 kt',
+                data: kPath,
+                borderColor: '#00adb5',
+                backgroundColor: 'rgba(0, 173, 181, 0.1)',
+                borderWidth: 2,
+                pointRadius: 3,
+                fill: false
+            },
+            {
+                label: '解析稳态 k*',
+                data: steadyLabels,
+                borderColor: '#c5a059',
+                borderDash: [5, 5],
+                borderWidth: 1.5,
+                pointRadius: 0,
+                fill: false
+            }
+        ];
+
+        if (charts.timePath) {
+            charts.timePath.data.labels = tLabels;
+            charts.timePath.data.datasets = datasets;
+            charts.timePath.update('none');
+        } else {
+            let ctx = document.getElementById('chartTimePath').getContext('2d');
+            charts.timePath = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: tLabels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: '时间期数 t', color: '#a1a1a6' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#a1a1a6' }
+                        },
+                        y: {
+                            title: { display: true, text: '人均资本 kt', color: '#a1a1a6' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#a1a1a6' },
+                            min: 0
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#f5f5f7' } }
+                    }
+                }
+            });
+        }
+    }
+
+    function buildLossPathDiagram() {
+        let kstar = calcExactSteadyState(state.A, state.s, state.alpha, state.delta);
+        let maxK = Math.max(3.0, kstar * 1.5);
+        let kGrid = [];
+        let lossGrid = [];
+        
+        let steps = 150;
+        for (let i = 0; i <= steps; i++) {
+            let k = (maxK / steps) * i;
+            if (k === 0) k = 1e-4; // prevent division by zero in derivatives
+            kGrid.push(k);
+            lossGrid.push(loss(k, state.A, state.s, state.alpha, state.delta));
+        }
+
+        // Solver path mapping
+        let solverPoints = state.solverPath.map((k) => ({
+            x: k,
+            y: loss(k, state.A, state.s, state.alpha, state.delta)
+        }));
+
+        let datasets = [
+            {
+                label: '损失函数 (Squared Loss Surface)',
+                data: kGrid.map((k, idx) => ({x: k, y: lossGrid[idx]})),
+                borderColor: '#00adb5',
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: 0,
+                showLine: true
+            },
+            {
+                label: '稳态最小值 (Loss=0)',
+                data: [{x: kstar, y: 0}],
+                borderColor: '#c5a059',
+                backgroundColor: '#c5a059',
+                pointRadius: 6,
+                showLine: false
+            },
+            {
+                label: '求解器迭代路径',
+                data: solverPoints,
+                borderColor: '#ff2e63',
+                backgroundColor: '#ff2e63',
+                borderWidth: 1.5,
+                pointRadius: 3,
+                showLine: true
+            }
+        ];
+
+        if (charts.lossPath) {
+            charts.lossPath.data.datasets = datasets;
+            charts.lossPath.options.scales.x.max = maxK;
+            charts.lossPath.update('none');
+        } else {
+            let ctx = document.getElementById('chartLossPath').getContext('2d');
+            charts.lossPath = new Chart(ctx, {
+                type: 'scatter',
+                data: { datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'bottom',
+                            title: { display: true, text: '人均资本估值 k', color: '#a1a1a6' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#a1a1a6' },
+                            min: 0,
+                            max: maxK
+                        },
+                        y: {
+                            type: 'linear',
+                            title: { display: true, text: '损失函数值 (g(k) - k)^2', color: '#a1a1a6' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#a1a1a6' },
+                            min: 0
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#f5f5f7' } }
+                    }
+                }
+            });
+        }
+    }
+
+    function buildResidualsDiagram() {
+        let iters = state.solverResidual.map((val, idx) => idx);
+        
+        let datasets = [
+            {
+                label: '残差绝对值 |f(k)|',
+                data: state.solverResidual,
+                borderColor: '#ff2e63',
+                backgroundColor: 'rgba(255, 46, 99, 0.1)',
+                borderWidth: 2,
+                pointRadius: state.solverResidual.length < 50 ? 3 : 0,
+                fill: true
+            }
+        ];
+
+        if (charts.residuals) {
+            charts.residuals.data.labels = iters;
+            charts.residuals.data.datasets = datasets;
+            charts.residuals.update('none');
+        } else {
+            let ctx = document.getElementById('chartResiduals').getContext('2d');
+            charts.residuals = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: iters,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: '迭代步数 (Iterations)', color: '#a1a1a6' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { color: '#a1a1a6' }
+                        },
+                        y: {
+                            type: 'logarithmic',
+                            title: { display: true, text: '方程残差 (对数坐标)', color: '#a1a1a6' },
+                            grid: { color: 'rgba(255,255,255,0.05)' },
+                            ticks: { 
+                                color: '#a1a1a6',
+                                callback: function(value, index, values) {
+                                    return value.toExponential(0);
+                                }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#f5f5f7' } }
+                    }
+                }
+            });
+        }
+    }
+
+    // Refresh all charts and variables
+    function render() {
+        updateLabels();
+        
+        if (state.activeTab === 'tab-dynamics') {
+            buildPhaseDiagram();
+            buildTimePathDiagram();
+        } else {
+            buildLossPathDiagram();
+            buildResidualsDiagram();
+        }
+    }
+
+    // Event Listeners
+    function setupEventListeners() {
+        // Sliders
+        document.getElementById('paramA').addEventListener('input', (e) => {
+            state.A = parseFloat(e.target.value);
+            runSolverSimulation();
+            render();
+        });
+        document.getElementById('paramS').addEventListener('input', (e) => {
+            state.s = parseFloat(e.target.value);
+            runSolverSimulation();
+            render();
+        });
+        document.getElementById('paramAlpha').addEventListener('input', (e) => {
+            state.alpha = parseFloat(e.target.value);
+            runSolverSimulation();
+            render();
+        });
+        document.getElementById('paramDelta').addEventListener('input', (e) => {
+            state.delta = parseFloat(e.target.value);
+            runSolverSimulation();
+            render();
+        });
+        document.getElementById('paramK0').addEventListener('input', (e) => {
+            state.k0 = parseFloat(e.target.value);
+            runSolverSimulation();
+            render();
+        });
+        document.getElementById('paramKGuess').addEventListener('input', (e) => {
+            state.kGuess = parseFloat(e.target.value);
+            runSolverSimulation();
+            render();
+        });
+        document.getElementById('paramEta').addEventListener('input', (e) => {
+            state.eta = parseFloat(e.target.value);
+            runSolverSimulation();
+            render();
+        });
+
+        // Solver selector buttons
+        document.getElementById('btnSolverGD').addEventListener('click', () => {
+            state.solver = 'gd';
+            document.getElementById('btnSolverGD').classList.add('active');
+            document.getElementById('btnSolverNewton').classList.remove('active');
+            document.getElementById('learningRateContainer').style.display = 'block';
+            runSolverSimulation();
+            render();
+        });
+
+        document.getElementById('btnSolverNewton').addEventListener('click', () => {
+            state.solver = 'newton';
+            document.getElementById('btnSolverNewton').classList.add('active');
+            document.getElementById('btnSolverGD').classList.remove('active');
+            document.getElementById('learningRateContainer').style.display = 'none';
+            runSolverSimulation();
+            render();
+        });
+
+        // Manual solver run
+        document.getElementById('btnRunSolver').addEventListener('click', () => {
+            runSolverSimulation();
+            render();
+        });
+
+        // Tabs switcher
+        document.getElementById('tabDynamicsLink').addEventListener('click', (e) => {
+            state.activeTab = 'tab-dynamics';
+            document.getElementById('tabDynamicsLink').classList.add('active');
+            document.getElementById('tabSolversLink').classList.remove('active');
+            document.getElementById('tab-dynamics').classList.add('active');
+            document.getElementById('tab-solvers').classList.remove('active');
+            render();
+        });
+
+        document.getElementById('tabSolversLink').addEventListener('click', (e) => {
+            state.activeTab = 'tab-solvers';
+            document.getElementById('tabSolversLink').classList.add('active');
+            document.getElementById('tabDynamicsLink').classList.remove('active');
+            document.getElementById('tab-solvers').classList.add('active');
+            document.getElementById('tab-dynamics').classList.remove('active');
+            render();
+        });
+    }
+
+    // Init onload
+    window.addEventListener('DOMContentLoaded', () => {
+        setupEventListeners();
+        runSolverSimulation();
+        render();
+    });
+</script>
+
+</body>
+</html>
